@@ -1,0 +1,174 @@
+#!/bin/bash
+
+ if [ $# -eq 0 ]; then
+    echo "Usage: $0 <Basisordner> [DIPRO_Datenfile] [waitfor_jobid]"
+    exit 1
+ fi
+
+ if [ ! -d "$1" ]; then
+    echo "directory $1 doesn't exist!"
+    exit 1
+ fi
+
+ JOB=${1}
+ NAM=${1}
+ #KEY=".ssh/stahs"
+
+if [ $# -ge 3 ]; then
+ 	Geo_data_info=${3}
+else
+	Geo_data_info=' '
+fi
+
+ DEPEND="#" 
+ if [ $# -ge 4 ]; then
+      DEPEND="#PBS -W depend=afterany:$3"
+ fi
+
+ CURDIR=`pwd`
+# set -vx
+ DIPRO_Datenfile='Datenauswertung_SAB_H_H0_Jab_H0_H0_SAB_L0_L0_Jab_L0_L0.dat'    #Defaultname fuer das File in das die Diprodaten geschrieben werden. 
+if [ $# -ge 2 ]; then
+    DIPRO_Datenfile=${2}
+    echo " Use ${DIPRO_Datenfile} for output" 
+fi
+
+ #MEM=`cat $1 | grep -i %mem | cut -f2 -d"="`
+ #[ -e "$MEM" ] && MEM=1GB
+ #echo MEM = $MEM
+
+ #PPN=`cat $1 | grep -i %nproc | cut -f2 -d"="`
+ #[ -e "$PPN" ] && PPN=1
+# PPN=8
+# echo PPN = $PPN
+
+#PRE=$(pwd | sed s/${USER}/,/ | cut -d',' -f1,1)
+
+#echo $PRE
+
+#exit
+#cat  > g09_test.pbs << EOF
+# activate verbose shell
+ 
+
+# ! need to use scp/ssh via gondor !
+# create temporary input/output directory
+#TMPINOUT="/exports/queuehome/m/mboec_02/queue_inout/g09.${PBS_JOBID}"
+# TMPINOUT="queue_inout/g09.${PBS_JOBID}"
+# ssh gondor mkdir -p ${TMPINOUT}
+
+# create SCRATCH directory
+# SCRATCH="/scratch/g09.${PBS_JOBID}"
+# mkdir -p ${SCRATCH}
+
+
+# echo "Starting ${JOB} from ${CURDIR} on ${PARENT}"
+
+
+
+
+# run JOB in SCRATCH directory on PARENT
+# cd ${SCRATCH}
+ #touch _START_
+
+
+# fetch input data 
+#cp -p ${CURDIR}/${JOB} .
+# ssh gondor " scp -i ${KEY} -pr ${S_HOST}:${CURDIR}/${JOB} ${TMPINOUT}"
+# ssh gondor " scp -i ${KEY} -pr ${S_HOST}:${CURDIR}/DIPRO-nMO-V7 ${TMPINOUT}"
+# ssh gondor " scp -i ${KEY} -p ${S_HOST}:${CURDIR}/${JOB%.com}.chk ${TMPINOUT}"
+
+# scp -pr gondor:${TMPINOUT}/* .
+
+# set GAUSSIAN environment
+ # rev. D01 @gondor
+   export g09root=/opt/intel
+   export GAUSS_EXEDIR=/opt/intel/g09   
+   export PATH=/opt/intel/g09:$PATH
+
+# set INTEL environment
+ #currently @gondor
+   export LD_LIBRARY_PATH=/opt/intel/lib/intel64:/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH
+
+ #wechsle in Basisordner
+ #cd ./DIPRO
+ cd ${JOB}
+
+ #berechne molA
+ cd molA
+ if [ ! -e *.log ] && [ -e monomer.inp ] ; then
+    g09 monomer.inp
+ fi # existiert monomer.inp und kein *.log file
+
+if [ -e *.log ] && [[ $(tail -1 *.log | cut -c 1-19) == *"Normal termination"* ]];then  # existiert etwas mit dem Namen *.log ?
+    #berechne molB
+    cd ../molB
+    if [ ! -e *.log ] && [ -e monomer.inp ] ; then
+        g09 monomer.inp
+    fi # existiert monomer.inp und kein *.log file
+      
+    if [ -e *.log ] && [[ $(tail -1 *.log | cut -c 1-19) == *"Normal termination"* ]];then
+        #berechne dimer
+        cd ../dim
+        g09 dimer.inp
+        
+        if [ -e *.log ] && [[ $(tail -1 *.log | cut -c 1-19) == *"Normal termination"* ]];then
+            #run DIPRO
+            ../../DIPRO-nMO-V7 
+
+            Datei=$(ls 'Ergebnis'*'MO-V7.txt' | tail -1) 
+ 
+            if [ -e ${Datei} ] && [ -n ${Datei} ]; then ### Test ob Datei existiert und Variable nicht leer 
+                    xA=$(grep "1 HOMO_A to HOMO_B" $Datei) 
+                    xA=${xA#*' 1 HOMO_A to HOMO_B'}  
+                    xB=$(grep "2 LUMO_A to LUMO_B" $Datei)
+                    xB=${xB#*' 2 LUMO_A to LUMO_B'}
+                    SAB_H0_H0=$(grep "S_AB HOMO_A   HOMO_B " $Datei) 
+                    SAB_H0_H0=${SAB_H0_H0#*'S_AB HOMO_A   HOMO_B'}
+                    SAB_L0_L0=$(grep "S_AB LUMO_A   LUMO_B " $Datei) 
+                    SAB_L0_L0=${SAB_L0_L0#*'S_AB LUMO_A   LUMO_B'}
+                    echo  '  '${SAB_H0_H0}' '${xA}' '${SAB_L0_L0}' '${xB}'  '${JOB}' '${Geo_data_info} >> tmp.dat
+            else # Ergebnis-Datei fuer DIPRO existiert nicht
+                echo "Fehler: Die_DIPRO_Ergebnisdatei_existiert_nicht_:${Datei}  ${JOB}" 
+                echo "Fehler: Die_DIPRO_Ergebnisdatei_existiert_nicht_:${Datei}  ${JOB}"  >> ${CURDIR}/../${DIPRO_Datenfile} 	
+            fi # Ergebnis-Datei existiert
+      fi # dimer.log erzeugt fuer Dimer
+    fi # monomer.log erzeugt fuer molB
+fi # monomer.log erzeugt fuer molA
+
+if [ ! -e ${CURDIR}/${JOB}/dim/tmp.dat ]; then # DIPRO-output nicht erzeugt?
+	rm ${CURDIR}/${JOB}/molA/Gau*
+	rm ${CURDIR}/${JOB}/molB/Gau*
+	rm ${CURDIR}/${JOB}/dim/Gau*
+	echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} "
+	echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} " > ${CURDIR}/${JOB}/dim/tmp.dat
+   	echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} " >> ${CURDIR}/../${DIPRO_Datenfile}
+else  # DIPRO-Output erzeugt -> Anhaengen an alte Datenliste
+	cat ${CURDIR}/${JOB}/dim/tmp.dat >> ${CURDIR}/../${DIPRO_Datenfile}
+fi		
+#cd ../../../
+ 
+# put output data & clean up
+# scp -pr ${SCRATCH}/* gondor:${TMPINOUT}
+# ssh gondor " scp -i ${KEY} -pr ${TMPINOUT}/* ${S_HOST}:${CURDIR}"
+
+
+
+#rm -r   ${SCRATCH}/*
+#rmdir ${SCRATCH}
+
+
+
+# retrieve PBS output
+# scp -p /var/spool/torque/spool/${PBS_JOBID}.OU gondor:${TMPINOUT}
+# scp -p /var/spool/torque/spool/${PBS_JOBID}.ER gondor:${TMPINOUT}
+
+# ssh  gondor " scp -i ${KEY} ${TMPINOUT}/${PBS_JOBID}.OU ${PBS_O_HOST}:QSUBIO "
+# ssh  gondor " scp -i ${KEY} ${TMPINOUT}/${PBS_JOBID}.ER ${PBS_O_HOST}:QSUBIO "
+
+# ssh gondor " rm -r ${TMPINOUT}/* "
+# ssh gondor " rmdir ${TMPINOUT} "
+
+
+##EOF
+

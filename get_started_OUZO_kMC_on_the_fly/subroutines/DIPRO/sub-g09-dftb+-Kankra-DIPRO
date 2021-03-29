@@ -1,0 +1,404 @@
+#!/bin/bash
+
+ if [ $# -eq 0 ]; then
+    echo "Usage: $0 <Basisordner> [DIPRO_Datenfile] [waitfor_jobid]"
+    exit 1
+ fi
+
+ if [ ! -d "$1" ]; then
+    echo "directory $1 doesn't exist!"
+    exit 1
+ fi
+
+ JOB=${1}
+ NAM=${1}
+ 
+NCPUS=8
+NODE=1
+CURDIR=`pwd`
+QUEUE=batch
+TIME=96
+ 
+#KEY=".ssh/stahs"
+### get the number of cores available.
+NPROCESSORS=$(grep -c ^processor /proc/cpuinfo 2>/dev/null || sysctl -n hw.ncpu || echo "$NUMBER_OF_PROCESSORS")
+if ! [[ "${NPROCESSORS}" =~ ^[0-9]+$ ]] ; then ### check if is not an integer.
+        echo "Number of processores could not be determined: $NPROCESSORS"
+	echo " Use: NCPUS=${NCPUS}"
+else
+	NCPUS=${NPROCESSORS}
+fi
+
+
+
+
+sub_g09="true"
+sub_dftb_plus='false'
+if [ $# -ge 2 ]; then
+	if [ "$2" == "sub_g09" ] ; then
+		sub_g09='true'
+		sub_dftb_plus='false'
+	elif [ "$2" == "sub_dftb" ] || [ "$2" == "sub_dftb_plus" ] || [ "$2" == "sub_dftb+" ] ; then
+		sub_g09='false'
+		sub_dftb_plus='true'
+	fi
+fi
+
+echo "use: sub_g09=${sub_g09} or sub_dftb_plus=${sub_dftb_plus} "
+DIPRO_Datenfile='Datenauswertung_SAB_H_H0_Jab_H0_H0_SAB_L0_L0_Jab_L0_L0.dat'    #Defaultname fuer das File in das die Diprodaten geschrieben werden. 
+if [ $# -ge 3 ]; then
+    DIPRO_Datenfile=${3}
+    echo " Use ${DIPRO_Datenfile} for output." 
+fi
+
+
+if [ $# -ge 4 ]; then
+ 	Geo_data_info=${4}
+else
+	Geo_data_info=' '
+fi
+
+ DEPEND="#" 
+ if [ $# -ge 5 ]; then
+      DEPEND="#PBS -W depend=afterany:$5"
+ fi
+
+ CURDIR=`pwd`
+# set -vx
+
+
+ #MEM=`cat $1 | grep -i %mem | cut -f2 -d"="`
+ #[ -e "$MEM" ] && MEM=1GB
+ #echo MEM = $MEM
+
+ #PPN=`cat $1 | grep -i %nproc | cut -f2 -d"="`
+ #[ -e "$PPN" ] && PPN=1
+# PPN=8
+# echo PPN = $PPN
+
+#PRE=$(pwd | sed s/${USER}/,/ | cut -d',' -f1,1)
+
+#echo $PRE
+
+#exit
+#cat  > g09_test.pbs << EOF
+# activate verbose shell
+
+
+
+
+### qsub -V << EOF
+###!/bin/bash
+###PBS -l walltime=${TIME}:00:00,nodes=${NODE}:ppn=${NCPUS}
+###PBS -q ${QUEUE}
+###PBS -N ${JOB}
+###PBS -e ${HOME}/QSUBIO
+###PBS -o ${HOME}/QSUBIO
+##${DEPEND}
+##
+
+#shorten host name
+S_HOST=\${PBS_O_HOST%.uni-muenster.de}
+
+
+
+## ! need to use scp/ssh via gondor !
+## create temporary input/output directory
+#TMPINOUT="/exports/queuehome/t/t_koch08/queue_inout/g09.${PBS_JOBID}"
+#TMPINOUT="queue_inout/g09.${PBS_JOBID}"
+#ssh gondor mkdir -p ${TMPINOUT}
+
+## create SCRATCH directory
+# SCRATCH="/scratch/g09.${PBS_JOBID}"
+# mkdir -p ${SCRATCH}
+
+## echo "Starting ${JOB} from ${CURDIR} on ${PARENT}"
+
+## run JOB in SCRATCH directory on PARENT
+# cd ${SCRATCH}
+ #touch _START_
+
+
+# fetch input data 
+#cp -p ${CURDIR}/${JOB} .
+# ssh gondor " scp -i ${KEY} -pr ${S_HOST}:${CURDIR}/${JOB} ${TMPINOUT}"
+# ssh gondor " scp -i ${KEY} -pr ${S_HOST}:${CURDIR}/DIPRO-nMO-V7 ${TMPINOUT}"
+# ssh gondor " scp -i ${KEY} -p ${S_HOST}:${CURDIR}/${JOB%.com}.chk ${TMPINOUT}"
+
+# scp -pr gondor:${TMPINOUT}/* .
+
+# set GAUSSIAN environment
+ # rev. D01 @gondor
+ #  export g09root=/opt/intel
+ #  export GAUSS_EXEDIR=/opt/intel/g09   
+ #  export PATH=/opt/intel/g09:$PATH
+
+# set INTEL environment
+ #currently @gondor
+ #  export LD_LIBRARY_PATH=/opt/intel/lib/intel64:/opt/intel/mkl/lib/intel64:$LD_LIBRARY_PATH
+
+ #wechsle in Basisordner
+ #cd ./DIPRO
+ cd ${JOB}
+
+if [ "${sub_g09}" == 'true' ] ; then 
+####### run g09 DIPRO #####
+     if [[ "${HOSTNAME}" == *"balrog"* ]] || [[ "${HOSTNAME}" == *"kankra"* ]] || [[ "${HOSTNAME}" == *"edoras"* ]]   ; then 
+		# set GAUSSIAN environment
+ 		# rev. D01 @gondor
+	  	export g09root=/opt/intel
+ 	  	export GAUSS_EXEDIR=/opt/intel/g09   
+ 	  	export PATH=/opt/intel/g09:$PATH
+
+		# set INTEL environment
+ 		#currently @gondor
+ 	  	export LD_LIBRARY_PATH=/opt/intel/lib/intel64:/opt/intel/mkl/lib/intel64:${LD_LIBRARY_PATH}
+		export GAUSS_MEMDEF=500MW
+
+     elif [[ "${HOSTNAME}" == *"palma003"* ]] ; then
+	 	g09root=/home/t/t_wina01/g09/
+  		export GAUSS_EXEDIR=${g09root}
+  		export PATH=${g09root}:${PATH}
+		export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/Applic.ZIV/Intel/CproF/11.1/064/lib/intel64:/Applic.ZIV/Intel/CproF/11.1/064/mkl/lib/em64t
+	
+     elif [[ "${HOSTNAME}" == *"palma"* ]] ; then
+		# set g09-D01 environment palma
+		#
+ 	 	source /Applic.PALMA/gruppen/q0grimme/bin/set_pgi-9.0.sh
+	 	g09root=/Applic.PALMA/gruppen/q0grimme/g09-D01/g09/ 
+  		export GAUSS_EXEDIR=${g09root}
+  		export PATH=${g09root}:${PATH}
+  		export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${g09root}/g09:/share/Applic.PALMA/compiler/intel/12.1/composerxe/lib/intel64
+     elif [[ "${HOSTNAME}" == *"sl"* ]] ; then
+		module load gaussian/g09
+     elif [[ "${HOSTNAME}" == *"mn"* ]] ; then
+		## nwzphi
+		export GAUSS_SCRDIR=${TMPNAM}
+		export g09root=/home/t/t_koch08
+		export GAUSS_EXEDIR=/home/t/t_koch08/g09_D/g09
+		export PATH=${PATH}:/home/t/t_koch08/g09_D/g09
+		export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/Applic.ZIV/Intel/Version2013/lib
+     elif [[ "${HOSTNAME}" == *"r"* ]] || [[ "${HOSTNAME}" == *"n"* ]]; then
+		  ### g09 palma2c von Marcus
+		  SCRATCH="."
+		  export g09root=/home/m/mboec_02/software/g09/g09-d01
+		  export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${g09root}
+		  export GAUSS_EXEDIR=${g09root}
+		  export GAUSS_SCRDIR=${SCRATCH}
+		  export GAUSS_MEMDEF=500MW
+     fi # HOSTNAME g09 setup
+
+
+    #Berechne molA
+    cd molA
+    if [ ! -e *.log ] && [ -e monomer.inp ] ; then
+        g09 monomer.inp
+    fi # existiert monomer.inp und kein *.log file
+    
+    if [ -e *.log ] && [[ $(tail -1 *.log | cut -c 1-19) == *"Normal termination"* ]];then  # existiert etwas mit dem Namen *.log ?
+        #berechne molB
+        cd ../molB
+        if [ ! -e *.log ] && [ -e monomer.inp ] ; then
+            g09 monomer.inp
+        fi # existiert monomer.inp und kein *.log file
+        
+        if [ -e *.log ] && [[ $(tail -1 *.log | cut -c 1-19) == *"Normal termination"* ]];then
+            #berechne dimer
+            cd ../dim
+            g09 dimer.inp
+            
+            if [ -e *.log ] && [[ $(tail -1 *.log | cut -c 1-19) == *"Normal termination"* ]];then
+                #run DIPRO
+                ../../DIPRO-nMO-V10 "g09"
+    
+                Datei=$(ls -ltr 'Ergebnis'*'MO-V10.txt' | awk '{print $9}' | tail -1) 
+    
+                if [ -e ${Datei} ] && [ -n ${Datei} ]; then ### Test ob Datei existiert und Variable nicht leer 
+                        xA=$(grep "1 HOMO_A to HOMO_B" $Datei) 
+                        xA=${xA#*' 1 HOMO_A to HOMO_B'}  
+                        xB=$(grep "2 LUMO_A to LUMO_B" $Datei)
+                        xB=${xB#*' 2 LUMO_A to LUMO_B'}
+                        SAB_H0_H0=$(grep "S_AB HOMO_A   HOMO_B " $Datei) 
+                        SAB_H0_H0=${SAB_H0_H0#*'S_AB HOMO_A   HOMO_B'}
+                        SAB_L0_L0=$(grep "S_AB LUMO_A   LUMO_B " $Datei) 
+                        SAB_L0_L0=${SAB_L0_L0#*'S_AB LUMO_A   LUMO_B'}
+                        echo  '  '${SAB_H0_H0}' '${xA}' '${SAB_L0_L0}' '${xB}'  '${JOB}' '${Geo_data_info} >> tmp.dat
+                else # Ergebnis-Datei fuer DIPRO existiert nicht
+                    echo "Fehler: Die_DIPRO_Ergebnisdatei_existiert_nicht_:${Datei}  ${JOB}" 
+                    echo "Fehler: Die_DIPRO_Ergebnisdatei_existiert_nicht_:${Datei}  ${JOB}"  >> ${CURDIR}/../${DIPRO_Datenfile} 	
+                fi # Ergebnis-Datei existiert
+        fi # dimer.log erzeugt fuer Dimer
+        fi # monomer.log erzeugt fuer molB
+    fi # monomer.log erzeugt fuer molA
+    
+    if [ ! -e ${CURDIR}/${JOB}/dim/tmp.dat ]; then # DIPRO-output nicht erzeugt?
+	ls -1 ${CURDIR}/${JOB}/molA/Gau* > /dev/null 2>&1
+	if [ "$?" = "0" ]; then
+		rm ${CURDIR}/${JOB}/molA/Gau*
+	else
+		echo "Did not find molA/Gau* file."
+	fi
+
+	ls -1 ${CURDIR}/${JOB}/molB/Gau* >/dev/null 2>&1 
+	if [ "$?" = "0" ]; then
+		rm ${CURDIR}/${JOB}/molB/Gau*
+	else
+		echo "Did not find molB/Gau* file."
+	fi
+	
+	ls -1 ${CURDIR}/${JOB}/dim/Gau* >/dev/null 2>&1 
+	if [ "$?" = "0" ]; then
+		rm ${CURDIR}/${JOB}/dim/Gau*
+	else
+		echo "Did not find dim/Gau* file."
+	fi
+
+	#if test -n "$(find . -maxdepth 3 -name ${CURDIR}/${JOB}/molA/'Gau*' -print -quit)"; then
+        echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} "
+        echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} " > ${CURDIR}/${JOB}/dim/tmp.dat
+        echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} " >> ${CURDIR}/../${DIPRO_Datenfile}
+    else  # DIPRO-Output erzeugt -> Anhaengen an alte Datenliste
+        cat ${CURDIR}/${JOB}/dim/tmp.dat >> ${CURDIR}/../${DIPRO_Datenfile}
+    fi		
+    cd ../../../
+####### end run g09 DIPRO #####
+
+
+######## run dftb+ DIPRO ######   
+elif [ "${sub_dftb_plus}" == 'true' ] ; then
+	if [[ "${HOSTNAME}" == *"balrog"* ]] || [[ "${HOSTNAME}" == *"kankra"* ]]  ; then 
+	  	dftb_plus_PATH='/opt/files/dftb+/dftbplus-17.1.x86_64-linux/bin'
+	elif [[ "${HOSTNAME}" == *"edoras"* ]] ; then
+		dftb_plus_PATH='/home/t/t_koch08/dftb+/dftbplus-17.1.x86_64-linux/bin'
+	elif [[ "${HOSTNAME}" == *"palma"* ]] ; then
+		dftb_plus_PATH='/home/t/t_koch08/dftb+/dftbplus-17.1.x86_64-linux/bin'
+	elif [[ "${HOSTNAME}" == *"r"* ]] || [[ "${HOSTNAME}" == *"n"* ]]  ; then
+		### palma2c
+		dftb_plus_PATH='/home/t/t_koch08/dftb+/dftbplus-17.1.x86_64-linux/bin'
+	else
+		dftb_plus_PATH='.'
+	fi
+
+    declare -i count_eigenvec_ok=0
+    for molX in molA molB dim ; do
+        if [ ! -e "./${molX}/eigenvec_${molX}.dat" ] ; then
+            echo ${molX}
+            cd ./${molX}
+            if [ -e ./dftb_in.hsd ] ; then
+		if [ -s *.gen ] ; then
+                	${dftb_plus_PATH}/dftb+ > ${molX}_dftb_plus.log
+		else
+			echo "Error: No *.gen file was found ${JOB}/${molX}/*.gen"
+			echo "Error: No *.gen file was found ${JOB}/${molX}/*.gen"  >> ${CURDIR}/../${DIPRO_Datenfile}
+			exit 1
+		fi
+                if [ -e eigenvec.out ] ; then
+                    if [ -e detailed.out ] ; then
+                        ../../eigenvDFTB+2DIPRO eigenvec.out detailed.out > eigenvec_${molX}.dat
+                        count_eigenvec_ok+=1   #increment
+                    else
+                        echo "Fehler: File_was_not_produced: ${JOB}/${molX}/detailed.out  " 
+                        echo "Fehler: File_was_not_produced: ${JOB}/${molX}/detailed.out  " >> ${CURDIR}/../${DIPRO_Datenfile}
+			exit 1
+                    fi # -e detailed.out
+                else
+                    echo "Fehler: File_was_not_produced: ${JOB}/${molX}/eigenvec.bin " 
+                    echo "Fehler: File_was_not_produced: ${JOB}/${molX}/eigenvec.bin " >> ${CURDIR}/../${DIPRO_Datenfile}
+		    exit 1
+                fi # -e eigenvec.bin     
+            fi # execution dftb+
+            cd ../
+        else
+            count_eigenvec_ok+=1 #increment
+        fi # -e molX/eigenvec_${molX}.dat?
+    done # molX
+    
+    
+    if [ ${count_eigenvec_ok} == 3 ] ; then # 3 eigenvectore 
+        cd ./dim/
+        ## check if the overlap matrix for the dimer exists
+        if [ -e "./overreal.dat" ] ; then
+            count_eigenvec_ok+=1   #increment
+        else
+            if [ -e dftb_in.hsd ] ; then
+                RealHS=$( grep "WriteRealHS = No" dftb_in.hsd)
+                if [[ *"${RealHS##*=}"* == *No* ]] ; then
+                    sed -i 's/WriteRealHS = No/WriteRealHS = Yes/g' dftb_in.hsd
+                    ${dftb_plus_PATH}/dftb+ > dim_dftb_plus_overlap.log
+                    if [ -e "./overreal.dat" ] ; then
+                        count_eigenvec_ok+=1   #increment
+                    fi # -e overreal.dat
+                fi 
+            fi # -e dftb_in.hsd # dimer overlap matrix with dftb+
+        fi # -e ./dim/overreal.dat
+                
+        
+        if [ -e ../../DIPRO-nMO-V10 ] ; then # run DIPRO
+            if [ ${count_eigenvec_ok} == 4 ] ; then # 3 eigenvectore + 1 overlap matix
+            ../../DIPRO-nMO-V10 "dftb+"
+            fi # run DIPRO
+            Datei=$(ls -ltr 'Ergebnis'*'MO-V10.txt' | awk '{print $9}' | tail -1) 
+ 
+            if [ -e "${Datei}" ] && [ -n "${Datei}" ]; then ### Test ob Datei existiert und Variable nicht leer 
+                    xA=$(grep "1 HOMO_A to HOMO_B" $Datei) 
+                    xA=${xA#*' 1 HOMO_A to HOMO_B'}  
+                    xB=$(grep "2 LUMO_A to LUMO_B" $Datei)
+                    xB=${xB#*' 2 LUMO_A to LUMO_B'}
+                    SAB_H0_H0=$(grep "S_AB HOMO_A   HOMO_B " $Datei) 
+                    SAB_H0_H0=${SAB_H0_H0#*'S_AB HOMO_A   HOMO_B'}
+                    SAB_L0_L0=$(grep "S_AB LUMO_A   LUMO_B " $Datei) 
+                    SAB_L0_L0=${SAB_L0_L0#*'S_AB LUMO_A   LUMO_B'}
+                    echo  '  '${SAB_H0_H0}' '${xA}' '${SAB_L0_L0}' '${xB}'  '${JOB}' '${Geo_data_info} >> tmp.dat
+            else # Ergebnis-Datei fuer DIPRO existiert nicht
+                echo "Fehler: Die_DIPRO_Ergebnisdatei_existiert_nicht_:${Datei}  ${JOB}" 
+                echo "Fehler: Die_DIPRO_Ergebnisdatei_existiert_nicht_:${Datei}  ${JOB}"  >> ${CURDIR}/../${DIPRO_Datenfile} 	
+            fi # Ergebnis-Datei existiert
+            
+        else # DIPRO
+            echo "Fehler: File_does_not_exist: DIPRO-nMO-V10"
+            echo "Fehler: File_does_not_exist: DIPRO-nMO-V10" >> ${CURDIR}/../${DIPRO_Datenfile}
+	    exit 1
+        fi # run DIPRO
+        cd ../
+    fi # 3 eigenvector calculated
+    if [ ! -e ${CURDIR}/${JOB}/dim/tmp.dat ]; then # DIPRO-output nicht erzeugt?
+        echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} "
+        echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} " > ${CURDIR}/${JOB}/dim/tmp.dat
+        echo "Fehler: Kein_Output_der_DIPRO_Methode_erzeugt_fuer_: ${JOB} " >> ${CURDIR}/../${DIPRO_Datenfile}
+	exit 1
+    else  # DIPRO-Output erzeugt -> Anhaengen an alte Datenliste
+        cat ${CURDIR}/${JOB}/dim/tmp.dat >> ${CURDIR}/../${DIPRO_Datenfile}
+    fi		
+    ###### END run dftb+ DIPRO ######
+else
+    echo "Fehler: Select_submission_Programm_[sub_g09/sub_dftb+]" 
+    echo "Fehler: Select_submission_Programm_[sub_g09/sub_dftb+]" >> ${CURDIR}/${DIPRO_Datenfile}
+fi # select sub_g09 or sub_dftb+
+
+ 
+ 
+## put output data & clean up
+#
+# scp -pr ${SCRATCH}/* gondor:${TMPINOUT}
+# ssh gondor " scp -i ${KEY} -pr ${TMPINOUT}/* ${S_HOST}:${CURDIR}"
+
+
+
+#rm -r   ${SCRATCH}/*
+#rmdir ${SCRATCH}
+
+
+
+### retrieve PBS output
+# scp -p /var/spool/torque/spool/${PBS_JOBID}.OU gondor:${TMPINOUT}
+# scp -p /var/spool/torque/spool/${PBS_JOBID}.ER gondor:${TMPINOUT}
+
+# ssh  gondor " scp -i ${KEY} ${TMPINOUT}/${PBS_JOBID}.OU ${PBS_O_HOST}:QSUBIO "
+# ssh  gondor " scp -i ${KEY} ${TMPINOUT}/${PBS_JOBID}.ER ${PBS_O_HOST}:QSUBIO "
+
+# ssh gondor " rm -r ${TMPINOUT}/* "
+# ssh gondor " rmdir ${TMPINOUT} "
+
+
+#EOF
+

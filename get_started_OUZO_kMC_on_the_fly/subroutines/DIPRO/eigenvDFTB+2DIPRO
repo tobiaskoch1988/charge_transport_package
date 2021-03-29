@@ -1,0 +1,66 @@
+#!/bin/bash
+#awk eigenvector dftb+  modify
+eigenvectorfile='eigenvec.out'
+detailedfile='detailed.out'
+
+if [ $# -ne 0 ]; then
+    if [ $# -gt 0 ]; then
+        eigenvectorfile=${1}
+    fi
+    if [ $# -eq 2 ]; then
+        detailedfile=${2}
+    fi
+    if [ $# -gt 2 ]; then
+        echo "Usage: $0 [eigenvec.out] [detailed.out]"
+        exit 1
+    fi 
+fi
+
+if [ ! -f "${detailedfile}" ]; then
+   echo "File ${detailedfile} doesn't exist!"
+   exit 1
+fi
+
+if [ ! -f "${eigenvectorfile}" ]; then
+   echo "File ${eigenvectorfile} doesn't exist!"
+   exit 1
+fi
+
+cat ${detailedfile} | grep -v \# |\
+awk 'NF' |awk 'BEGIN {
+             fcount=0       # switch, if Filling section starts
+             EV_count_on=0
+             EV_count=0
+             count_orbs=0   # counts the number of orbitals to get the LUMO and HOMO index number
+             }
+            {
+             if ( $1 == "Eigenvalues" && $2 == "/eV" ) { EV_count_on=0} # turn off, as we count the eigenvalues in Hartree list
+             if ( EV_count_on == 1 ) { EV_count=EV_count+1
+                                       printf"%14.8f\n",$1 } 
+             if ( $1 == "Eigenvalues" && $2 == "/H" ) { EV_count_on=1 # turn on, as we count the eigenvalues in Hartree list
+                    print $1" [a.u.]" }    ##### THE FORMAT WITH [a.u.] is read from the DIPRO file as \H is not read in Fortran90
+                    
+            ### counts the fillings to get the HOMO-level index
+             if (fcount == 1 ) { count_orbs=count_orbs+1 
+                                if ($1 < 0.0005 ) {   ### cutoff to ignore small contaminations
+                                    LUMO=count_orbs
+                                    HOMO=count_orbs-1
+                                    fcount=0
+                                    }
+                                }
+            if ( $1 == "Fillings" ) { fcount=1}
+            } 
+            END { print "NBasis=",EV_count
+                  print "HOMO= ",HOMO
+                  print "LUMO= ",LUMO
+            #printf "%15.9f%15.9f%15.9f\n",10.0,10.0,10.0
+           }'
+
+cat ${eigenvectorfile} | grep -v \# |\
+awk 'NF' | awk 'BEGIN { }
+            {if ( $1 == "Eigenvector:" ) { print $1" "$2" "$3 }                                           
+                else if (NF==0) {}
+                else if (NF==3) { printf "%10.6f\n",$2}
+                else if (NF==5) { printf "%10.6f\n",$4 }
+            } 
+            END { }'
