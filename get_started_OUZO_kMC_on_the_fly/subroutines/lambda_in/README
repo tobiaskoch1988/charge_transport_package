@@ -1,0 +1,26 @@
+Calculate  lambda_in   using Gaussian09!
+
+Call this using aufruf.out or the charge_transport_package 
+ =================================
+ |   charge transport package    |
+ =================================
+ charge_transport_package  lambda_in  equi_2000ps_500k.gro  38  DIPBI  449  DIPBI  UFF  1  1  true  UFF(QEq)
+ INPUT:
+aufruf.out   lambda_in  equi_2000ps_500k.gro  38  DIPBI  449  DIPBI  UFF  1  1  true  UFF(QEq)
+
+
+
+
+GENERATE lambda_in INPUT FILES
+Usage: ./lambda_in_setup_on_the_fly_oniom.sh < monomerA.xyz monomerB.xyz inputline foldername zieldatei run_lambda_in subg09_logical oniom  >
+Bsp. ./lambda_in_setup_on_the_fly_oniom.sh MolA.xyz MolB.xyz "UFF  Opt(Tight,MaxMicroiterations=30000) " MolA_MolB_B3LYP_6-31G+ results_lambda_in.dat run_lambda_in.sh true oniom
+ logical=true fuer sofortiges Submittieren
+
+SUBMISSION
+sub-myg09-lambda_in_palma.sh
+Usage: ./sub-myg09-lambda_in_palma.sh  monomerA monomerB foldername zieldatei [waitfor_jobid]
+
+
+RUN GAUSSIAN09 CALCULATIONS
+Usage: ./run_lambda_in.sh monomerA monomerB foldername lambda_in_results.dat oniom_ok=[oniom/false] use_reiterations=[true/false] sub_g09=[sub_g09/false] 
+Execute ./run_lambda_in.sh in foldername/./run_lambda_in.sh
