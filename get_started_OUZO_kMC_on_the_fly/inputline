@@ -1,0 +1,1 @@
+ /usr/bin/python ./kmc_multigeo_V4 sim_data_12N/new_sorted_neighbours_P3HT_pur_1000ps_900K_65_G0.ngh sim_data_12N/no_box_P3HT_pur_1000ps_900K_65_G0.xyz  sim_data_12N/P3HT_pur_1000ps_900K_65_G0.gro False sim_data_12N/sorted_lambda_neighbours_P3HT_pur_1000ps_900K_65_G0_rcut_30.ngh  
