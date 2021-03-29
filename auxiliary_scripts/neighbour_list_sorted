@@ -1,0 +1,323 @@
+#!/usr/bin/python
+# @author Jim Bachmann
+
+import os,sys,numpy as np, re
+
+if 1==1:																									#check the input
+	SCRIPT=sys.argv[0].split('/')
+	NARGS=len(sys.argv)-1
+	THELP=['-h','-help']
+
+	if NARGS<4 or (NARGS>0 and sys.argv[1] in THELP):
+		print""
+		print"parameterexpected:",SCRIPT[len(SCRIPT)-1],
+		print"[input.xyz] [input.gro] [box size x] [box size y] [box size z] (x,y,z in Angstroem)"
+		print""
+		sys.exit(0)
+
+	if (sys.argv[1][-4:] != ".xyz"):
+		print""
+		print" wrong input format"
+		print" expected: [input.xyz] [input.gro] [box size x] [box size y] [box size z] (x,y,z in Angstroem)"
+		print""
+		sys.exit(0)
+	
+	
+	if (sys.argv[2][-4:] != ".gro"):
+		print""
+		print" wrong input format"
+		print" expected: [input.xyz] [input.gro] [box size x] [box size y] [box size z] (x,y,z in Angstroem)"
+		print""
+		sys.exit(0)
+
+
+##### input & output files
+coords=open(sys.argv[1])
+gro_coords=open(sys.argv[2])
+boxx=float(sys.argv[3])
+boxy=float(sys.argv[4])
+boxz=float(sys.argv[5])
+neighbour_list=open("neighbours.ngh",'w')#erases data
+
+
+
+##### variables
+xyz_list=[] #stores the coordinates for fast access
+grid_box=[] #stores the index and x,y,z coordinates per grid box as a list of lists
+number_of_points=0 #contains the number of discretization points
+xedge=0 #checks if the edge of the box in the grid search is reached
+yedge=0 #
+zedge=0 #
+atom_list=[[]] #atom_list[i] contains a list (gro format) of all atoms in mol i
+mol_count=0
+
+##### constants
+#boxx=13.90228*10
+#boxy=26.96753*10
+#boxz=14.58116*10
+
+numberofneighbours=12
+
+subboxes=4 ##10 #number of boxes the box is split up to in the grid search algorithm
+
+##### counts which line is read
+iline=0
+
+##### define your functional forms here
+
+
+######## functional_form
+#### functional form is the evalution of the marcus rate, based on distance & molecule types
+#### the parameter lambda und the energy shift are expected to be constant, because
+#### the transfer integral varies in several orders of magnitude compared to 
+#### lambda or energy shift which vary just by factors of ~2
+def functional_form(list_of_distance, mol_type_list):
+	#list_of_distance[1:]=1/list_of_distance[1:]
+	#list_of_distance[1:]=list_of_distance[1:]/sum(list_of_distance[1:])
+	#list_of_distance[0]=1-sum(list_of_distance[1:])
+	#print mol_type_list
+	return list_of_distance
+########
+
+#####
+
+######## read coords from .gro file
+iline=0
+while 1:
+	line1 = gro_coords.readline()
+	if not line1:
+		break
+		
+	##### get the number of atoms	
+	if iline==1:	number_of_atoms = int(line1)	
+	elif iline==2:	last_mol_number = int(line1[0:5])
+	####
+	if iline>=2 and iline<number_of_atoms+2:
+		##### split the line
+		line=[int(line1[0:5]),str(line1[5:10]),str(line1[10:15]),int(line1[15:20]),float(line1[20:28]),float(line1[28:36]),float(line1[36:44])]
+		#account for periodic boundary conditions
+		#move coordinates back into the box
+  		if line[4]>boxx/10 : line[4]=line[4]-boxx/10
+		elif line[4]<0 : line[4]=line[4]+boxx/10
+  		if line[5]>boxy/10 : line[5]=line[5]-boxy/10
+		elif line[5]<0 : line[5]=line[5]+boxy/10
+  		if line[6]>boxz/10 : line[6]=line[6]-boxz/10
+		elif line[6]<0 : line[6]=line[6]+boxz/10
+		##### check if a new molecule is present or not
+		mol_number = line[0]
+		if mol_number!=last_mol_number:
+			mol_count = mol_count + 1
+			atom_list.append([])
+		atom_list[mol_count].append(line)	
+		##### store the mol_number to check if the next line contains the same molecule
+		last_mol_number = mol_number
+	iline=iline+1
+iline=0
+########
+
+
+######## In this part the COM are read and a grid search is applied
+####initialize the grid list
+for x in range(subboxes):
+	grid_box.append([])
+	for y in range(subboxes):
+		grid_box[x].append([])
+		for z in range(subboxes):
+			grid_box[x][y].append([])
+
+#### first build a list for each grid cell, containing index and coordinates
+#### each grid cell gets their own list
+print('... reading data ...')
+while 1:
+	line1 = coords.readline()
+	if not line1:
+		break
+	splitted_line=line1.split()
+	if iline>=2: 
+		#append all coords for fast access
+		xyz_list.append([float(splitted_line[1]),float(splitted_line[2]),float(splitted_line[3])])
+		#account for periodic boundary conditions
+		#move too big coordinates back into the box
+  		xyz_list[iline-2][0] = xyz_list[iline-2][0] - int(xyz_list[iline-2][0]/boxx)*boxx
+  		xyz_list[iline-2][1] = xyz_list[iline-2][1] - int(xyz_list[iline-2][1]/boxy)*boxy
+  		xyz_list[iline-2][2] = xyz_list[iline-2][2] - int(xyz_list[iline-2][2]/boxz)*boxz
+		#move negative coords back into the box
+		if xyz_list[iline-2][0]<0: xyz_list[iline-2][0]=xyz_list[iline-2][0]+boxx
+		if xyz_list[iline-2][1]<0: xyz_list[iline-2][1]=xyz_list[iline-2][1]+boxy
+		if xyz_list[iline-2][2]<0: xyz_list[iline-2][2]=xyz_list[iline-2][2]+boxz
+		#print error if negative grid boxes are assigned
+		if int(xyz_list[iline-2][0]/boxx*subboxes)<0: print('x error at index' + str(iline))
+		if int(xyz_list[iline-2][1]/boxx*subboxes)<0: print('y error at index' + str(iline))
+		if int(xyz_list[iline-2][2]/boxx*subboxes)<0: print('z error at index' + str(iline))
+		#divide your box up into sub boxes and assign each COM to one of them
+		#grid_box[x][y][z] will then contain a list of COM where
+		#grid_box[x][y][z][i] contains index and coordinates of point i [index, x, y, z]
+		grid_box[int(xyz_list[iline-2][0]/boxx*subboxes)][int(xyz_list[iline-2][1]/boxy*subboxes)][int(xyz_list[iline-2][2]/boxz*subboxes)].append([iline-2,np.asarray([xyz_list[iline-2][0],xyz_list[iline-2][1],xyz_list[iline-2][2]])])
+	iline=iline+1
+print('... grid list generated with ' + str(iline-2)+ ' points ...')
+#number_of_points = iline-2
+
+######## starting to generate the neighbour list
+#dist_list=[]
+dist_list = np.asarray([])
+index_list=[]
+#### search in all boxes
+for x in range(len(grid_box)):
+	for y in range(len(grid_box[x])):
+		for z in range(len(grid_box[x][y])):
+			#### search the list of box x,y,z
+			for i in range(len(grid_box[x][y][z])):
+				#### account for neighbouring boxes
+				for helpx in [-1,0,1]:
+					for helpy in [-1,0,1]:
+						for helpz in [-1,0,1]:
+							xi = x+helpx
+							yi = y+helpy
+							zi = z+helpz
+							##account for pbd
+							if xi==-1: 
+								xi=subboxes-1
+								xedge=-1
+							elif xi==subboxes: 
+								xi=0
+								xedge=1
+							if yi==-1: 
+								yi=subboxes-1
+								yedge=-1
+							elif yi==subboxes: 
+								yi=0
+								yedge=1
+							if zi==-1: 
+								zi=subboxes-1
+								zedge=-1
+							elif zi==subboxes: 
+								zi=0
+								zedge=1
+							correctedge=np.array([xedge*boxx,yedge*boxy,zedge*boxz])
+							#### build the distance list. dist_list[n] contains [distance of indices, i, j]
+							for j in range(len(grid_box[xi][yi][zi])):
+								if i!=j:
+									#dist_list.append(np.linalg.norm(grid_box[x][y][z][i][1]-grid_box[xi][yi][zi][j][1]))
+									dist_list=np.append(dist_list,np.linalg.norm(grid_box[x][y][z][i][1]-grid_box[xi][yi][zi][j][1]-correctedge))
+									index_list.append([grid_box[x][y][z][i][0],grid_box[xi][yi][zi][j][0]])
+							xedge=yedge=zedge=0 #reset the edge variables
+				#### get the 6 smallest distances
+				ind = dist_list.argsort()[:numberofneighbours]
+				#print ind[:]
+				#print(dist_list[ind[0]][0])
+				#print(str(dist_list[ind[0]])+' '+str(dist_list[ind[1]])+' '+str(dist_list[ind[2]])+' '+str(dist_list[ind[3]])+' '+str(dist_list[ind[4]])+' '+str(dist_list[ind[5]]))
+				#print(str(index_list[ind[0]])+' '+str(index_list[ind[1]])+' '+str(index_list[ind[2]])+' '+str(index_list[ind[3]])+' '+str(index_list[ind[4]])+' '+str(index_list[ind[5]]))
+				#neighbour_list.write(str(index_list[ind[0]][0])+'	'+str(0)+'	'+str('	'.join(map(str, dist_list[ind[0:(numberofneighbours)]])))+ '\n')
+				
+
+				######## some words for indexing
+				####	index_list is a list of indices in the format: [current index, neighbour] [current index, next neighbour] ...
+				####	and will be updated for each step
+				####	ind is a list containing the 6 indices of the molecules which are closest
+				####	grid_box[x][y][z][i][0] contains the index of the current center of mass
+				####	also index_list[ind[0]][0] contains the index of the current center of mass
+				####	index_list[ind[k]][1] contains the indices of the 6 closest neighbours
+
+
+
+				dist_list=dist_list[ind]
+				######## optional: use min_dist instead of COM_dist
+				min_dist_key=False
+				print_dist=np.asarray([])
+				if min_dist_key==True:
+					com_index=grid_box[x][y][z][i][0]
+					for k in range(numberofneighbours):
+						min_dist_list=[]
+						#### get COM index com_index_k of molecule k
+						com_index_k = int(index_list[ind[k]][1])
+						#### searching all atoms j of current mol com_index
+						for l in range(len(atom_list[com_index])):
+							vecj = np.asarray([[atom_list[com_index][l][4]],[atom_list[com_index][l][5]],[atom_list[com_index][l][6]]])
+							#### calc all dist. from atom j to all atoms of neighbouring mol k
+							for h in range(len(atom_list[com_index_k])):
+								#### calc distance e.g. from work of frank lengers
+								#### quantum-mechanical calculations of charge transfer processes
+								#### in organic semiconductors page 43/44
+								#### best criteria: absolute minimal distance of 2 atoms
+								vech = np.asarray([[atom_list[com_index_k][h][4]],[atom_list[com_index_k][h][5]],[atom_list[com_index_k][h][6]]])
+								#### account for pbc
+								if abs(vech[0]-vecj[0])>boxx/2.0:
+									if vech[0]-vecj[0]<0: vech[0]=vech[0]+boxx
+									else: vech[0]=vech[0]-boxx
+								if abs(vech[1]-vecj[1])>boxy/2.0:
+									if vech[1]-vecj[1]<0: vech[0]=vech[0]+boxy
+									else: vech[1]=vech[1]-boxy
+								if abs(vech[2]-vecj[2])>boxz/2.0:
+									if vech[2]-vecj[2]<0: vech[2]=vech[2]+boxz
+									else: vech[2]=vech[2]-boxz
+								#### 		
+								min_dist_list=np.append(min_dist_list,np.linalg.norm(vecj-vech))
+						print_dist = np.append(print_dist,np.amin(min_dist_list))
+					dist_list=print_dist
+				#print(print_dist)
+				#print(dist_list)
+				########
+
+				########
+				#### in this part the molecule types of the neighbouring molecules are stored as strings
+				#### to be passed to the rate evalutation routine, because the transfer-integrals depend
+				#### on mol_types. then the calculated distances and mol types are passed to the
+				#### evaluation routine "functional_form" defined above
+				mol_types=[]
+				for p in range(numberofneighbours):
+					mol_types.append(str(atom_list[index_list[ind[p]][1]][0][1]))
+				list_temp = functional_form(dist_list[0:(numberofneighbours)],mol_types)
+				neighbour_list.write(str(index_list[ind[0]][0])+'	'+str(0)+'	'+str('	'.join(map(str, list_temp)))+ '\n')
+				########
+
+				########
+				#### in this part the molecule indices of the neighbouring molecules are stored 
+				#### and then printed into the neighbours.ngh file 
+				printhelp=[]
+				for p in range(numberofneighbours):
+					printhelp.append(str(index_list[ind[p]][1]))
+				neighbour_list.write(str(index_list[ind[0]][0])+'	'+str(index_list[ind[0]][0])+'	'+('	'.join(printhelp))+ '\n')
+				########
+				#print(ind[0])
+				index_list=[]		
+				dist_list = np.asarray([])
+	print(str(x) + ' out of '+str(subboxes)+' x boxes done ~ ' + str(x/float(subboxes) * 100)+ '%')
+	
+###### output description ######
+### the output file has the format:
+### index(residuum number)	stay prob.	jump to ind. prob.	jump to ind. prob.			
+### index(residuum number)	index		index where to jump	index where to jump
+### ...
+###### output description ######			
+
+	
+######## close files
+coords.close()
+neighbour_list.close()
+########
+
+##### input & output files
+neighbour_list=open("neighbours.ngh",'r')#erases data
+
+def sortkey_natural(s):
+    return tuple(int(part) if re.match(r'[0-9]+$', part) else part
+                for part in re.split(r'([0-9]+)', s))
+
+### sort the list
+sorted_list=open("sorted_neighbours.ngh",'w')
+#lines = neighbour_list.readlines()
+#lines.sort()
+#sorted_list.write(print str(lines))
+
+with neighbour_list as r:
+    for line in sorted(r, key=sortkey_natural):
+        sorted_list.write(line)
+
+######## close files
+sorted_list.close()
+neighbour_list.close()
+########
+
+print('neighbour_list_sorted done')
+
+

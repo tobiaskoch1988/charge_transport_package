@@ -1,0 +1,165 @@
+#!/usr/bin/python
+#### set mass CH2 and CH3 for def2 to zero in order to get the thiophene ring centre and not a hopping-site on the side-chain!!!
+import os,sys,numpy as np
+
+if 1==1:																									#check the input
+	SCRIPT=sys.argv[0].split('/')
+	NARGS=len(sys.argv)-1
+	THELP=['-h','-help']
+
+	if NARGS<1 or (NARGS>0 and sys.argv[1] in THELP):
+		print""
+		print"parameterexpected:",SCRIPT[len(SCRIPT)-1],
+		print"[input.gro]"
+		print""
+		sys.exit(0)
+
+	if (sys.argv[1][-4:] != ".gro"):
+		print""
+		print" wrong input format"
+		print" expected: [input.gro]"
+		print""
+		sys.exit(0)
+
+
+##### input & output files
+coords=open(sys.argv[1])
+COM_out=open("COM.xyz",'w')#erases data
+
+
+#COM_out.write('14559'+'\n')	
+#COM_out.write('\n')
+
+##### variables
+COM=[0,0,0]
+COM_list=[]
+mass=0.0
+complete_mass=0.0
+###contains the index of the molecule from the .gro file
+mol_number=0
+###counts the molecule from which the COM is calculated
+mol_count=0
+
+##### constants
+### masses in atomic units
+massC=12.0107
+massN=14.0067
+massO=15.9994
+massH=1.00794
+massCl=35.453
+massF=18.9984
+massS=32.065
+massAl=26.9815
+#### set mass CH2 and CH3 for def2 to zero in order to get the thiophene ring centre and not a hopping-site on the side-chain!!!
+massCH1=0   ###13.0186 
+massCH2=0   ###14.02658
+massCH3=0   ###15.0345
+##? CA - start C-atom
+massCA=13.01864
+massHC=1.00794
+massOE=15.9994
+massNR=14.0067
+massNT=14.0067
+
+##### counts which line is read
+iline=0
+
+######## In this part the data is read and the COM are calculated
+while 1:
+	line1 = coords.readline()
+	if not line1:
+		break
+		
+	##### get the number of atoms	
+	if iline==1:	number_of_atoms = int(line1)
+	##### get the center of masses
+	if iline==2:	last_mol_number = int(line1[0:5])
+	if iline>=2 and iline<number_of_atoms+2:
+		##### split the line
+		line=[int(line1[0:5]),str(line1[5:10]),str(line1[10:15]),int(line1[15:20]),float(line1[20:28]),float(line1[28:36]),float(line1[36:44])]
+		#print line
+		##### check if a new molecule is present or not, if so: store COM of old molecule
+		mol_number = line[0]
+		if mol_number!=last_mol_number:
+			COM_list.append([COM[0]/complete_mass,COM[1]/complete_mass,COM[2]/complete_mass])		
+			##### multiply by 10 for nanometer (.gro) to angstrom (.xyz)
+			COM_out.write('    C' + '	' + str(10*COM[0]/(complete_mass)) +'	'+ str(10*COM[1]/(complete_mass))  +'	'+  str(10*COM[2]/(complete_mass)) + '\n')			
+			COM=[0,0,0]
+			complete_mass=0.0	
+			print str(mol_count) +' handled'
+			print last_mol_number
+			if last_mol_number!=mol_count:
+				print 'tmp: last_mol_number!=mol_count'
+				print 'error!'
+				#exit()
+			mol_count = mol_count + 1	
+		##### get the weight of the atom
+		if line[2]=='    C':	mass=massC	
+		elif line[2]=='    N':	mass=massN
+		elif line[2]=='    O':	mass=massO
+		elif line[2]=='    H':	mass=massH
+                elif line[2]=='    F':  mass=massF
+		elif line[2]=='   Cl':	mass=massCl
+		elif line[2]=='   Al':	mass=massAl
+		elif line[2]=='    S':	mass=massS
+                elif line[2]=='  CH1':  mass=massCH1
+		elif line[2]=='  CH2':	mass=massCH2
+		elif line[2]=='  CH3':	mass=massCH3
+		elif line[2]=='   CA':	mass=massCA
+		elif line[2]=='   HC':	mass=massHC
+		elif line[2]=='   NT':	mass=massNT
+		elif line[2]=='   NR':	mass=massNR
+		elif line[2]=='   OE':	mass=massOE
+		#### for Alq3
+		elif ('Ha' in line[2]) or ('Hb' in line[2]) or ('Hc' in line[2]):
+			mass=massH
+		elif ('Ca' in line[2]) or ('Cb' in line[2]) or ('Cc' in line[2]):
+			mass=massC
+		elif ('Na' in line[2]) or ('Nb' in line[2]) or ('Nc' in line[2]):
+			mass=massN
+		elif ('Oa' in line[2]) or ('Ob' in line[2]) or ('Oc' in line[2]):
+			mass=massO
+		#handle error
+		#handle error
+		#handle error
+		else: 
+			print('Read error in the following line: ')
+			print(line)
+			print('mass of atom at line '+str(iline)+' unknown.')
+			break
+		#calc total mass of molecule
+		complete_mass=complete_mass + mass
+		COM[0] = COM[0] + mass*float(line[4])
+		COM[1] = COM[1] + mass*float(line[5])
+		COM[2] = COM[2] + mass*float(line[6])
+		##### store the mol_number to check if the next line contains the same molecule
+		last_mol_number = mol_number
+		
+	iline = iline + 1
+
+
+COM_out.write('    C' + '	' + str(10*COM[0]/(complete_mass)) +'	'+ str(10*COM[1]/(complete_mass))  +'	'+  str(10*COM[2]/(complete_mass)) + '\n')
+#print str(mol_count) +' handled'
+#print last_mol_number			
+
+mol_count = mol_count+1
+
+##### put number of mols at the top of file for VMD
+COM_out=open("COM.xyz",'r+')
+data=COM_out.read()
+COM_out.seek(0)
+COM_out.truncate()
+COM_out.write(str(mol_count)+'\n')	
+COM_out.write('\n')
+COM_out.write(data)
+
+#print(COM[0]/complete_mass)
+#print(COM[1]/complete_mass)
+#print(COM[2]/complete_mass)
+#print(COM_list)
+coords.close()
+COM_out.close()
+########
+
+
+print ('Normal termination of Com_per_mol')

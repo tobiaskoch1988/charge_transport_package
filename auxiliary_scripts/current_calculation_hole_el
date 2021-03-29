@@ -1,0 +1,175 @@
+#!/usr/bin/python
+# @author Jim Bachmann modifiziert t_koch08
+import random, numpy as np, sys ,os
+
+if 1==1:								
+	SCRIPT=sys.argv[0].split('/')
+	NARGS=len(sys.argv)-1
+	THELP=['-h','-help']
+
+	if NARGS<4 or (NARGS>0 and sys.argv[1] in THELP):
+		print""
+		print"parameterexpected:",SCRIPT[len(SCRIPT)-1],
+		print" expected: [COM.xyz] [boxx] [boxy] [boxz] (in Angstroem)"
+		print""
+		sys.exit(0)
+
+	if (sys.argv[1][-4:] != ".xyz"):
+		print""
+		print" wrong input format"
+		print" expected: [COM.xyz] [boxx] [boxy] [boxz]  (in Angstroem)"
+		print""
+		sys.exit(0)
+
+
+##### input & output files
+traj_in=open(sys.argv[1])
+boxx=float(sys.argv[2])
+boxy=float(sys.argv[3])
+boxz=float(sys.argv[4])
+
+##### constants
+q_e = 1.6021755208E-19 #charge of the electron in Coulomb
+
+##### variables
+i=0
+n=0
+l=0
+k=0
+charge_list=[]
+old_charge_list=[]
+n_xyz=np.asarray([0,0,0])    #contains the number of charges passing the x-border of the box in pos. x direction
+n_xyz_el=np.asarray([0,0,0]) #contains the number of electrons passing the x-border of the box in pos. x direction
+n_xyz_lo=np.asarray([0,0,0]) #contains the number of hole passing the x-border of the box in pos. x direction
+I_x=0.0 #contains the currents in Ampere
+I_y=0.0
+I_z=0.0
+I_el=np.asarray([0,0,0]) #contains electon current
+I_lo=np.asarray([0,0,0]) #contains hole current
+vectorial_charge_flow=np.asarray([0,0,0])
+vectorial_charge_flow_el=np.asarray([0,0,0])
+vectorial_charge_flow_lo=np.asarray([0,0,0])
+printhelp=['x','y','z']
+time=0.0
+time_t0=0.0
+vecbox=np.asarray([boxx,boxy,boxz])
+
+##### analyse the trajectory
+while 1:
+	line1 = traj_in.readline()
+	if not line1:
+		break
+	if i==0: number_of_charges=int(line1)
+	if i==1 and n>=1:
+		splitted_line=line1.split()
+		time=float(splitted_line[3])
+		## save time_t0 as starting time of kmc_traj as this is only written always after the second step, if the calculation did not start with time_t0=0.0
+		if n==1: 
+			time_t0=time
+			print ('calculate the current and use initial time_t0: '+ str(time_t0) +' [s]')
+	if i>=2:
+		splitted_line=line1.split()
+		charge_list.append(splitted_line)
+	#if i>=2:
+	#	splitted_line=line1.split()
+	#	gridx=int(float(splitted_line[1])/boxx*subboxes)
+	#	gridy=int(float(splitted_line[2])/boxy*subboxes)
+	#	gridz=int(float(splitted_line[3])/boxz*subboxes)
+	#	# for every charge in grid_box[x][y][z] a 0 is appended
+	#	grid_box[gridx][gridy][gridz].append(0)
+	if i==number_of_charges+2:
+		if n!=0: #exclude the first step
+			while l<number_of_charges:
+				if old_charge_list[l] not in charge_list:
+					while k<number_of_charges:
+						if charge_list[k] not in old_charge_list:
+							#use this to get output in words to check program
+							#print('Atom '+str(l) +' moved from '+str(old_charge_list[l])+' to position '+str(k)+' at coords: '+str(charge_list[k]))
+							vec1=np.asarray([float(old_charge_list[l][1]),float(old_charge_list[l][2]),float(old_charge_list[l][3])])
+							vec2=np.asarray([float(charge_list[k][1]),float(charge_list[k][2]),float(charge_list[k][3])])
+							for i in range(3):
+								if vec2[i]-vec1[i]<-vecbox[i]/2:
+							#		print('vector '+str(i)+'	'+str(vec2[i]-vec1[i]))
+									vec2[i]=vec2[i]+vecbox[i]
+									n_xyz[i]=n_xyz[i]+1
+									if charge_list[k][0] == 'electron':
+										n_xyz_el[i]=n_xyz_el[i]+1
+									elif charge_list[k][0] == 'hole':
+										n_xyz_lo[i]=n_xyz_lo[i]+1
+									if n%(1.0E5)==0 : ###limit the printed output
+										print('charge jumped in pos. '+printhelp[i]+' direction in step: '+str(n))
+							#		print('corrected to '+str(vec2[i]-vec1[i]))
+								elif vec2[i]-vec1[i]>vecbox[i]/2:
+							#		print('minus vector '+str(i)+'	'+str(vec2[i]-vec1[i]))
+									vec2[i]=vec2[i]-vecbox[i]
+									n_xyz[i]=n_xyz[i]-1
+									if charge_list[k][0] == 'electron':
+										n_xyz_el[i]=n_xyz_el[i]-1
+									elif charge_list[k][0] == 'hole':
+										n_xyz_lo[i]=n_xyz_lo[i]-1
+									if n%(1.0E5)==0 : ###limit the printed output
+										print('charge jumped in neg. '+printhelp[i]+' direction in step: '+str(n))
+							#		print('corrected to '+str(vec2[i]-vec1[i]))
+							if charge_list[k][0] == 'electron':
+								vectorial_charge_flow = vectorial_charge_flow + (vec2-vec1)
+								vectorial_charge_flow_el = vectorial_charge_flow_el + (vec2-vec1) 
+							elif charge_list[k][0] == 'hole':
+								vectorial_charge_flow = vectorial_charge_flow - (vec2-vec1)
+								vectorial_charge_flow_lo = vectorial_charge_flow_lo + (vec2-vec1)
+						k=k+1		
+				l=l+1	
+		l=0
+		i=0
+		k=0
+		n=n+1
+		old_charge_list = charge_list
+		charge_list=[]	
+	i=i+1
+print('use finishing time: '+ str(time) +' [s]')
+print('found vectorial flow ' + str(vectorial_charge_flow))
+print('found vectorial electron flow ' + str(vectorial_charge_flow_el))
+print('found vectorial hole flow ' + str(vectorial_charge_flow_lo))
+
+current=vectorial_charge_flow*q_e/(time-time_t0)
+print('current: ' +str(current) + ' [Ang * A]')
+current_total=(vectorial_charge_flow[:]/[boxx,boxy,boxz])/(time-time_t0)*q_e
+print('total current: ' +str((current_total)) + ' [A]')
+cu_tot_el=(vectorial_charge_flow_el[:]/[boxx,boxy,boxz])/(time-time_t0)*q_e
+print('total electron current: ' +str((cu_tot_el)) + ' [A]')
+cu_tot_lo=(vectorial_charge_flow_lo[:]/[boxx,boxy,boxz])/(time-time_t0)*q_e
+print('total hole current: ' +str((cu_tot_lo)) + ' [A]')
+print('found charges jumping ' + str(n_xyz))
+print('found electrons jumping ' + str(n_xyz_el))
+print('found holes jumping ' + str(n_xyz_lo))
+print('current calculated:')
+I_x=n_xyz[0]*q_e/(time-time_t0)
+I_y=n_xyz[1]*q_e/(time-time_t0)
+I_z=n_xyz[2]*q_e/(time-time_t0)
+
+I_el=(n_xyz_el*q_e/(time-time_t0))
+I_lo=(n_xyz_lo*q_e/(time-time_t0))
+
+print('I_x='+str(I_x)+' A')
+print('I_y='+str(I_y)+' A')
+print('I_z='+str(I_z)+' A')
+
+print('I_el='+str(I_el)+' A')
+print('I_lo='+str(I_lo)+' A')
+current_file='current_n_t__Ix_Iy_Iz__cu_el__cu_lo__cu_total.dat'
+if os.path.exists(current_file):
+	current_file_out=open(str(current_file) , 'a')
+else:
+	current_file_out=open(str(current_file) , 'w')
+	current_file_out.write('### current with 1) Number of *.xyz steps: n 2) simulation time t-t0 [s] 3) I_x [A] 4) I_y [A] 5) I_z [A] 6) I_el 7) I_lo  8) total electron current [A]   9) total hole current [A]  10) total current sum [A]   11) current=vectorial_charge_flow/(time-time_t0)*q_e  [Ang * A]    12) traj_in *.xyz ' + '\n' )
+
+##current_file_out.write(str(n)+' '+str(float(time-time_t0))+' '+str(float(I_x))+' '+str(float(I_y))+' '+str(float(I_z))+' '+str(cu_tot_el)+' '+str(cu_tot_lo)+' '+str(current_total)+' '+str(current)'        '+str(sys.argv[1]) +  '\n')
+current_file_out.write(str(n)+' '+str(float(time-time_t0))+' '+str(float(I_x))+' '+str(float(I_y))+' '+str(float(I_z))+' '+str(float(I_el[0]))+' '+str(float(I_el[1]))+' '+str(float(I_el[2]))+' '+str(float(I_lo[0]))+' '+str(float(I_lo[1]))+' '+str(float(I_lo[2]))+' '+str(cu_tot_el)+' '+str(cu_tot_lo)+' '+str(current_total)+' '+str(current)+'        '+str(sys.argv[1]) +  '\n')
+print(str(n)+' '+str(float(time-time_t0))+' '+str(float(I_x))+' '+str(float(I_y))+' '+str(float(I_z))+' '+str(float(I_el[0]))+' '+str(float(I_el[1]))+' '+str(float(I_el[2]))+' '+str(float(I_lo[0]))+' '+str(float(I_lo[1]))+' '+str(float(I_lo[2]))+' '+str(cu_tot_el)+' '+str(cu_tot_lo)+' '+str(current_total)+' '+str(current)+'        '+str(sys.argv[1]) )
+
+print(str(n) + ' steps')
+#print('done')
+print('Normal termination of current calculation')
+########
+
+
+

@@ -1,0 +1,179 @@
+#!/usr/bin/python
+# @author Jim Bachmann
+# calculates the mean square displacement for a xyz trajectory file
+import os, random, numpy as np, sys
+
+if 1==1:								
+	SCRIPT=sys.argv[0].split('/')
+	NARGS=len(sys.argv)-1
+	THELP=['-h','-help']
+
+	if NARGS<4 or (NARGS>0 and sys.argv[1] in THELP):
+		print""
+		print"parameterexpected:",SCRIPT[len(SCRIPT)-1],
+		print" expected: [COM.xyz] [boxx] [boxy] [boxz] [optional:infostring]"
+		print""
+		sys.exit(0)
+
+	if (sys.argv[1][-4:] != ".xyz"):
+		print""
+		print" wrong input format"
+		print" expected: [COM.xyz] [boxx] [boxy] [boxz] [optional:infostring]"
+		print""
+		sys.exit(0)
+
+
+##### input & output files
+traj_in=open(sys.argv[1])
+boxx=float(sys.argv[2])
+boxy=float(sys.argv[3])
+boxz=float(sys.argv[4])
+
+msd_out=open("msd.dat", 'w' )
+msd_el_out=open("msd_el.dat", 'w' )
+msd_lo_out=open("msd_lo.dat", 'w' )
+
+##### variables
+i=0
+n=0
+l=0
+k=0
+charge_list=[]
+old_charge_list=[]
+vectorial_charge_flow=np.asarray([0,0,0])
+number_of_holes=0
+number_of_electrons=0
+MSD=0.0
+MSD_el=0.0
+MSD_lo=0.0
+k_B=8.6173303E-5   ### eV/K
+T=300   ## K Temperatur
+time=0.0
+time_t0=0.0 
+vecbox=np.asarray([boxx,boxy,boxz])
+infostring=' '
+
+### read infostring
+if (NARGS>4):
+	infostring=infostring+str(sys.argv[5])
+	print 'Use: '+str(sys.argv[0])+' '+str(sys.argv[1])+' '+str(sys.argv[2])+' '+str(sys.argv[3])+' '+str(sys.argv[4])+' '+str(infostring)+' Temp='+str(T)
+else:	
+	print 'Use: '+str(sys.argv[0])+' '+str(sys.argv[1])+' '+str(sys.argv[2])+' '+str(sys.argv[3])+' '+str(sys.argv[4])+' '+' Temp='+str(T)
+##### analyse the trajectory
+while 1:
+	line1 = traj_in.readline()
+	if not line1:
+		break
+	if i==0: 
+            number_of_charges=int(line1)
+            MSD_charge_k=np.zeros(shape=(number_of_charges))
+	if i==1 and n>=1:
+		splitted_line=line1.split()
+		time=float(splitted_line[3])
+		## save time_t0 as starting time of kmc_traj as this is only written always after the second step, if the calculation did not start with time_t0=0.0
+		if n==1: 
+			time_t0=time
+			print ('use starting time_t0: '+ str(time_t0) +' [s]')
+                        ### Determine the number of holes an electrons in a frame
+                        for j in range(number_of_charges):
+                            print j,old_charge_list[j][0] 
+                            if old_charge_list[j][0] == 'hole':
+                                number_of_holes=number_of_holes + 1
+                            elif old_charge_list[j][0] == 'electron':
+                                number_of_electrons=number_of_electrons + 1
+                        print('charges:'+str(number_of_charges)+' electrons:'+str(number_of_electrons)+' holes:'+str(number_of_holes))
+	if i>=2:
+		splitted_line=line1.split()
+		charge_list.append(splitted_line)
+	#if i>=2:
+	#	splitted_line=line1.split()
+	#	gridx=int(float(splitted_line[1])/boxx*subboxes)
+	#	gridy=int(float(splitted_line[2])/boxy*subboxes)
+	#	gridz=int(float(splitted_line[3])/boxz*subboxes)
+	#	# for every charge in grid_box[x][y][z] a 0 is appended
+	#	grid_box[gridx][gridy][gridz].append(0)
+	if i==number_of_charges+2:
+		if n!=0: #exclude the first step
+			while l<number_of_charges:
+				if old_charge_list[l] not in charge_list:
+					while k<number_of_charges:
+						if charge_list[k] not in old_charge_list:
+							#use this to get output in words to check program
+							#print('Atom '+str(l) +' moved from '+str(old_charge_list[l])+' to position '+str(k)+' at coords: '+str(charge_list[k]))
+							vec1=np.asarray([float(startlocations[l][1]),float(startlocations[l][2]),float(startlocations[l][3])])
+							vec2=np.asarray([float(charge_list[k][1]),float(charge_list[k][2]),float(charge_list[k][3])])
+							for i in range(3):
+								if vec2[i]-vec1[i]<-vecbox[i]/2:
+							#		print('vector '+str(i)+'	'+str(vec2[i]-vec1[i]))
+									vec2[i]=vec2[i]+vecbox[i]
+							#		print('corrected to '+str(vec2[i]-vec1[i]))
+								elif vec2[i]-vec1[i]>vecbox[i]/2:
+							#		print('minus vector '+str(i)+'	'+str(vec2[i]-vec1[i]))
+									vec2[i]=vec2[i]-vecbox[i]
+							#		print('corrected to '+str(vec2[i]-vec1[i]))
+							##### vec1 is the old location, vec2 is the new location of the particle
+							##### use this to calc the MSD
+							##### note: only 1 charge moves in 1 step
+							if charge_list[k][0] == 'electron':
+								MSD_el=MSD_el + np.sqrt(np.dot((vec1-vec2),(vec1-vec2)))
+							if charge_list[k][0] == 'hole':
+								MSD_lo=MSD_lo + np.sqrt(np.dot((vec1-vec2),(vec1-vec2)))
+                                                        MSD_charge_k[k]=MSD_charge_k[k]+np.sqrt(np.dot((vec1-vec2),(vec1-vec2)))
+							MSD=MSD + np.sqrt(np.dot((vec1-vec2),(vec1-vec2)))
+							#vectorial_charge_flow = vectorial_charge_flow + (vec2-vec1)
+						k=k+1		
+				l=l+1	
+		else: #first step
+			startlocations=charge_list
+		l=0
+		i=0
+		k=0
+		n=n+1
+		old_charge_list = charge_list
+		charge_list=[]	
+		if n%1000==0:
+			msd_out.write(str(time-time_t0)+'	'+str(MSD/float(number_of_charges))+'\n')
+			msd_el_out.write(str(time-time_t0)+'	'+str(MSD_el/float(number_of_electrons))+'\n')
+			msd_lo_out.write(str(time-time_t0)+'	'+str(MSD_lo/float(number_of_holes))+'\n')
+	i=i+1
+
+print('use finishing time: '+ str(time) +' [s]')
+MSD=MSD/float(number_of_charges)
+MSD_el=MSD_el/float(number_of_electrons)
+MSD_lo=MSD_lo/float(number_of_holes)
+print(str(MSD) + ' total MSD')
+print(str(MSD_el) + ' total electron MSD')
+print(str(MSD_lo) + ' total hole MSD')
+#print('found vectorial flow ' + str(vectorial_charge_flow))
+#print('mobility: '+str(10.0**(-20)*MSD/(2*3*float(time-time_t0))) +' m**2 / s')
+#print('electron mobility: '+str(10.0**(-20)*MSD_el/(2*3*float(time-time_t0))) +' m**2 / s')
+#print('hole mobility: '+str(10.0**(-20)*MSD_lo/(2*3*float(time-time_t0))) +' m**2 / s')
+
+### mobility, square displacement for individual charges, be carefull mobility is only defind as the average over N (Where N is the number of particles to be averaged)
+for j in range(number_of_charges):
+    print( str(j+1)+' '+old_charge_list[j][0]+' '+str(1.0E-16*MSD_charge_k[j]/(2*3*float(time-time_t0)) *1.0/(k_B*T) ) +' cm**2 / Vs'+'   MSD:' + str(MSD_charge_k[j]) )
+
+### mobility in cm**2 /Vs
+mobility_sum=1.0E-16*MSD/(2*3*float(time-time_t0))*1.0/(k_B*T)   
+mobility_el=1.0E-16*MSD_el/(2*3*float(time-time_t0))*1.0/(k_B*T) 
+mobility_lo=1.0E-16*MSD_lo/(2*3*float(time-time_t0))*1.0/(k_B*T)
+print('mobility: '+str(1.0E-16*MSD/(2*3*float(time-time_t0)) *1.0/(k_B*T) )  +' cm**2 / Vs')
+print('electron mobility: '+str(1.0E-16*MSD_el/(2*3*float(time-time_t0)) *1.0/(k_B*T) ) +' cm**2 / Vs')
+print('hole mobility: '+str(1.0E-16*MSD_lo/(2*3*float(time-time_t0)) *1.0/(k_B*T) ) +' cm**2 / Vs')
+
+
+mobility_file='mobility_n_t__mu_el__mu_lo.dat'
+if os.path.exists(mobility_file):
+	mobility_out=open(str(mobility_file) , 'a')
+else:
+	mobility_out=open(str(mobility_file) , 'w')
+	mobility_out.write('### mobility with 1) Number of *.xyz steps: n 2) simulation time t-t0 [s] 3) mobility_el [cm**2/Vs]   4) mobility_lo [cm**2/Vs]  5) mobility_sum [cm**2/Vs]  6) traj_in *.xyz ' + '\n' )
+
+mobility_out.write(str(n)+' '+str(float(time-time_t0))+' '+str(float(mobility_el))+' '+str(float(mobility_lo))+' '+str(float(mobility_sum))+'        '+str(sys.argv[1]) +' '+str(infostring) + '\n')
+
+print(str(n) + ' steps')
+#print('done')
+########
+
+
+

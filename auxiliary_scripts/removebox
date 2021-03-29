@@ -1,0 +1,79 @@
+#!/usr/bin/python
+# @author Jim Bachmann
+
+import os,sys,numpy as np
+
+if 1==1:																									#check the input
+	SCRIPT=sys.argv[0].split('/')
+	NARGS=len(sys.argv)-1
+	THELP=['-h','-help']
+
+	if NARGS<4 or (NARGS>0 and sys.argv[1] in THELP):
+		print""
+		print"parameterexpected:",SCRIPT[len(SCRIPT)-1],
+		print"[input.xyz] [box size x] [box size y] [box size z]    (boxsize in Angstroem) "
+		print""
+		sys.exit(0)
+
+	if (sys.argv[1][-4:] != ".xyz"):
+		print""
+		print" wrong input format"
+		print" expected: [input.xyz]"
+		print""
+		sys.exit(0)
+
+
+##### input & output files
+coords=open(sys.argv[1])
+boxx=float(sys.argv[2])
+boxy=float(sys.argv[3])
+boxz=float(sys.argv[4])
+out_xyz=open("no_box.xyz",'w')#erases data
+
+print 'Start removebox use:',boxx,boxy,boxz
+
+##### variables
+xyz_list=[] #stores the coordinates for fast access
+number_of_points=0 #contains the number of discretization points
+
+##### constants
+#boxx=13.90228*10
+#boxy=26.96753*10
+#boxz=14.58116*10
+
+
+##### counts which line is read
+iline=0
+
+
+#### first build a list for each grid cell, containing index and coordinates
+#### each grid cell gets their own list
+print('... reading data ...')
+while 1:
+	line1 = coords.readline()
+	if not line1:
+		break
+	splitted_line=line1.split()
+	
+	if iline>=2: 
+		#append all coords for fast access
+		xyz_list.append([float(splitted_line[1]),float(splitted_line[2]),float(splitted_line[3])])
+		#account for periodic boundary conditions
+		#move too big coordinates back into the box
+  		xyz_list[iline-2][0] = xyz_list[iline-2][0] - int(xyz_list[iline-2][0]/boxx)*boxx
+  		xyz_list[iline-2][1] = xyz_list[iline-2][1] - int(xyz_list[iline-2][1]/boxy)*boxy
+  		xyz_list[iline-2][2] = xyz_list[iline-2][2] - int(xyz_list[iline-2][2]/boxz)*boxz
+		#move negative coords back into the box
+		if xyz_list[iline-2][0]<0: xyz_list[iline-2][0]=xyz_list[iline-2][0]+boxx
+		if xyz_list[iline-2][1]<0: xyz_list[iline-2][1]=xyz_list[iline-2][1]+boxy
+		if xyz_list[iline-2][2]<0: xyz_list[iline-2][2]=xyz_list[iline-2][2]+boxz
+		out_xyz.write('    C' + '	' + str(xyz_list[iline-2][0]) +'	'+ str(xyz_list[iline-2][1])  +'	'+  str(xyz_list[iline-2][2]) + '\n')	
+	else: 	out_xyz.write(line1)		
+	iline=iline+1
+	
+######## close files
+out_xyz.close()
+########
+
+
+
