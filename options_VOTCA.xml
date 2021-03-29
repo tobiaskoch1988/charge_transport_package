@@ -1,0 +1,245 @@
+<options>
+       <!-- AUTOMATED MAPPING GENERATION ++++++++++++++++++++++++++++++++++++++ -->
+       <pdb2map>
+          <file>conf.pdb</file>
+          <outfile>system.xml</outfile>
+       </pdb2map>
+
+	
+	<!-- IMPORT DATA ++++++++++++++++++++++++++++++++++++++ -->
+	
+	<iimport>
+		<TI_tag>J_qs_boltz</TI_tag>         <!-- Read in transfer integrals from dimer projection folder structure -->
+	</iimport>
+	
+	
+	<eimport>
+		<energies>e_sites.dat</energies> 	<!-- Read in site energies from file (formatted as output in emultipole.control.output -->
+	</eimport>                            	<!-- Useful when distributing emultipole jobs on several machines and state files -->
+	
+	
+	
+	<!-- INPUT/OUTPUT/SUPPORT +++++++++++++++++++++++++++++ -->	
+	
+	<stateserver>
+		<out>stateserver.out</out>     		<!-- Calculator to retrieve info from database with formatted output -->
+		<keys>emp xmp elist ilist</keys>    <!-- Keys: emp xmp elist ilist pairs sites topology -->
+	</stateserver>	
+	
+	<tdump>
+		<md>md_check.pdb</md>				<!-- Output - Check MD trajectory -->
+		<qm>qm_check.pdb</qm>               <!-- Output - Check QM trajectory -->
+	</tdump>
+
+
+
+	<!-- ANALYSIS TOOLS +++++++++++++++++++++++++++++++++++ -->
+	
+	<density>
+		<axis> 0.0 0.0 1.0 </axis>			   <!-- Axis along which to calculate density and energy profile -->
+		<resolution>0.5</resolution>        <!-- Spatial resolution of profile -->
+		<auto_bin>1</auto_bin>              <!-- '0' manual binning using min and max, '1' automated binning -->
+		<min>-10</min>                      <!-- For manual binning: min distance along axis -->
+		<max>+10</max>		                  <!-- For manual binning: max distance along axis -->
+		
+		<output>density_profile.dat</output>		   <!-- Output density profile -->
+		<output_e>energy_profile.dat</output_e>		<!-- Output energy profile -->
+		<density_type>segments</density_type>        <!-- Species for density profile: 'segments' or 'atoms' -->
+	</density>
+		
+	
+	<eanalyze>
+		<resolution_sites>0.01</resolution_sites> <!-- Histogram site energies bin size -->
+		<resolution_pairs>0.01</resolution_pairs> <!-- Histogram site-energy diff. bin size -->
+		<resolution_space>0.1</resolution_space>  <!-- Site-energy correlation spatial resolution [nm] -->
+	</eanalyze>
+	
+	
+	<ianalyze>
+		<resolution_logJ2>0.1</resolution_logJ2>  <!-- Histogram log(J2) bin size -->
+		<states>1</states>                        <!-- States for which to calculate histogram '+1' and/or '-1' -->
+	</ianalyze>
+
+
+
+	<!-- SITE CALCULATORS +++++++++++++++++++++++++++++++++ -->
+	
+	<einternal>
+		<energiesXML>system.xml</energiesXML>	<!-- XML file including vacuum site, reorg. (charge, discharge) energies -->
+	</einternal>
+	
+
+	<emultipole>
+		<multipoles>system.xml</multipoles>  	<!-- XML allocation polar sites -> fragment -->
+		<control>
+			<induce>0</induce>          		<!-- '0' (do not polarize) or '1' (polarize) -->
+			<first>1</first>             		<!-- Number of first segment to calc. site energy for -->
+			<last>20000</last>               <!-- Number of last segment to calc. site energy for -->
+			<output>e_sites.dat</output>    	<!-- Output file that can be used for the eimport calculator -->
+			<check>mp_check.pdb</check> 		<!-- Check mapping of polar sites to fragments -->
+		</control>
+		<tholeparam>
+			<cutoff>3.0</cutoff>          		<!-- Cut-off for e-statics + polarization sphere e.g. 3.0 -->
+			<cutoff2>3.0</cutoff2>        		<!-- Cut-off for e-statics sphere e.g. 6.0 -->
+			<expdamp>0.39</expdamp>           	<!-- Damping factor for attenuated interactions --> 
+			<scaling>0.25 0.50 0.75</scaling> 	<!-- Bond scaling, currently not used -->
+		</tholeparam>
+		<convparam>
+			<wSOR_N>0.55</wSOR_N>           	<!-- mixing factor for successive overrelaxation of neutral system, usually between 0.3 and 0.5 -->
+			<wSOR_C>0.50</wSOR_C>           	<!-- mixing factor for successive overrelaxation of charged system, usually between 0.3 and 0.5 -->
+			<maxiter>512</maxiter>            	<!-- max. iteration in convergence loop -->
+			<tolerance>0.001</tolerance>      	<!-- convergence criterion -->
+		</convparam>
+		<esp>
+			<calcESP>0</calcESP>              <!-- '0' neglect this subcalculator, '1' calculate ESP on cubic grid, return -->
+			<doSystem>0</doSystem>            <!-- '0' calculate for input .mps files, '1' calculate for a segment in the MD trajectory -->
+			<cube>xy.cube</cube>              <!-- Cube file to define grid (= header of a GAUSSIAN cube file) -->
+			<output>esp_gdma.cube</output>    <!-- Output in GAUSSIAN cube file format -->
+		</esp>
+		<esf>
+			<calcESF>0</calcESF>              <!-- '0' neglect this subcalculator, '1' calculate electric field on grid, return -->
+			<grid>esf_grid.xyz</grid>         <!-- Grid points in xyz format -->
+			<output>esf.dat</output>          <!-- Output in xyz field -->
+		</esf>
+		<alphamol>
+			<calcAlpha>0</calcAlpha>          <!-- '0' neglect this subcalculator, '1' calculate molecular polarizability and return -->
+			<doSystem>0</doSystem>            <!-- '0' calculate for .mps input files, '1' calculate for all segments in system -->
+			<output>molpol.dat</output>       <!-- Output file, provides polarizability tensor, eigenframe, ... -->
+		</alphamol>
+	</emultipole>
+	
+	
+   
+   
+   <!--  like emultipole -->
+	<zmultipole>
+		<multipoles>system.xml</multipoles>  	<!-- XML allocation polar sites -> fragment -->
+		<control>
+			<induce>1</induce>          		<!-- '0' (do not polarize) or '1' (polarize) -->
+			<first>1</first>             		<!-- Number of first segment to calc. site energy for -->
+			<last>20000</last>                	<!-- Number of last segment to calc. site energy for -->
+			<output>e_sites.dat</output>    	<!-- Output file that can be used for the eimport calculator -->
+			<check>mp_z_check.pdb</check> 		<!-- Check mapping of polar sites to fragments -->
+		</control>
+		<tholeparam>
+			<cutoff>3.0</cutoff>          		<!-- Cut-off for e-statics + polarization sphere e.g. 3.0 -->
+			<cutoff2>3.0</cutoff2>        		<!-- Cut-off for e-statics sphere e.g. 6.0 -->
+			<expdamp>0.39</expdamp>           	<!-- Damping factor for attenuated interactions --> 
+			<scaling>0.25 0.50 0.75</scaling> 	<!-- Bond scaling, currently not used -->
+		</tholeparam>
+		<convparam>
+			<wSOR_N>0.55</wSOR_N>           	<!-- mixing factor for successive overrelaxation of neutral system, usually between 0.3 and 0.5 -->
+			<wSOR_C>0.50</wSOR_C>           	<!-- mixing factor for successive overrelaxation of charged system, usually between 0.3 and 0.5 -->
+			<maxiter>512</maxiter>            	<!-- max. iteration in convergence loop -->
+			<tolerance>0.001</tolerance>      	<!-- convergence criterion -->
+		</convparam>
+		<esp>
+			<calcESP>0</calcESP>              <!-- '0' neglect this subcalculator, '1' calculate ESP on cubic grid, return -->
+			<doSystem>0</doSystem>            <!-- '0' calculate for input .mps files, '1' calculate for a segment in the MD trajectory -->
+			<cube>xy.cube</cube>              <!-- Cube file to define grid (= header of a GAUSSIAN cube file) -->
+			<output>esp_gdma.cube</output>    <!-- Output in GAUSSIAN cube file format -->
+		</esp>
+		<esf>
+			<calcESF>0</calcESF>              <!-- '0' neglect this subcalculator, '1' calculate electric field on grid, return -->
+			<grid>esf_grid.xyz</grid>         <!-- Grid points in xyz format -->
+			<output>esf.dat</output>          <!-- Output in xyz field -->
+		</esf>
+		<alphamol>
+			<calcAlpha>0</calcAlpha>          <!-- '0' neglect this subcalculator, '1' calculate molecular polarizability and return -->
+			<doSystem>0</doSystem>            <!-- '0' calculate for .mps input files, '1' calculate for all segments in system -->
+			<output>molpol.dat</output>       <!-- Output file, provides polarizability tensor, eigenframe, ... -->
+		</alphamol>
+	</zmultipole>
+   
+   
+	
+	<!-- PAIR CALCULATORS ++++++++++++++++++++++++++++++++++++ -->
+	
+	<pairdump>
+	</pairdump>
+	
+		
+
+ 	<xmultipole>
+    	<multipoles>system.xml</multipoles> <!-- XML allocation polar sites -> fragment -->
+    	<control>
+		  <job_file>job.in</job_file>      	<!-- Listing of jobs, to create template, run 'stateserver' with key = 'xmp' -->
+		  <emp_file>mps.in</emp_file>		<!-- Allocation of .mps files to segs, to create template, run 'stateserver' with key = 'emp' -->
+		  <output>job.out</output>          <!-- Output energies calculated for jobs -->
+		  <pdb_check>mp_check</pdb_check>	<!-- Output - Check mapping of polar sites -->
+		  <write_chk>_chk</write_chk>       <!-- Write x y z charge file with dipoles split onto point charges spaced 1fm apart -->
+		  <format_chk>gaussian</format_chk> <!-- 'gaussian' or 'xyz' -->
+		  <split_dpl>1</split_dpl>          <!-- '0' do not split dipoles onto point charges, '1' do split -->
+		  <dpl_spacing>1e-2</dpl_spacing>	<!-- Spacing a [nm] to be used when splitting dipole onto point charges: d = q * a -->
+		</control>
+    	<tholemodel>
+		  <induce>1</induce>
+		  <cutoff1>3.0</cutoff1>
+		  <cutoff2>3.0</cutoff2>
+		  <exp_damp>0.39</exp_damp>
+		  <scaling>0.25 0.50 0.75</scaling>
+		</tholemodel>
+    	<convergence>
+		  <wSOR_N>0.35</wSOR_N>
+		  <wSOR_C>0.35</wSOR_C>
+		  <max_iter>512</max_iter>
+		  <tolerance>0.001</tolerance>
+		</convergence>
+    </xmultipole>
+	
+	
+	
+	<neighborlist>
+	   	<segments>
+		 	<type> PPDIK PPDIK </type>
+		 	<cutoff>3.0</cutoff> <!--  <cutoff>0.7</cutoff>   -->
+	   	</segments>
+	   	<segments>
+		 	<type> P3MTA P3MTA </type>
+		 	<cutoff>5.0</cutoff> <!--  <cutoff>0.7</cutoff>   -->
+	   	</segments>
+
+	   	<!--constant>0.7</constant--> 			<!-- If this option is active, same cut-off used for all pair types -->
+	</neighborlist>
+	
+	
+	<izindo>
+		<orbitalsXML>system.xml</orbitalsXML> 	<!-- XML system file including address of .orb files, transporting orbitals -->
+	</izindo>
+	
+
+	<eoutersphere>
+		<multipoles>system.xml</multipoles>   	            <!-- XML allocation polar sites -> fragment -->
+		<method>dielectric</method>    			    <!-- 'dielectric' -->
+		<pekar>0.05</pekar>	                            <!-- Pekar factor 1/eps_inf - 1/eps_0 -->
+		<cutoff>30.0</cutoff>				    <!-- Cut-off, currently not used -->
+	</eoutersphere>
+
+	
+	
+	
+	<rates>
+		<temperature>300</temperature> 			<!-- T [K] -->
+		<field>0 0 1000000</field>    		<!-- field x y z -->
+		<method>marcus</method>                 <!-- 'marcus' or 'jortner' -->
+	</rates>
+	<!-- KMC CALCULATORS +++++++++++++++++++++++++++++++++++++ -->
+	
+        <kmcmultiple>
+                <runtime unit='integer'>1.0E10</runtime>    <!-- 1E-5 t_koch08 -->
+                <outputtime unit='integer'>1.0E9</outputtime>   <!-- 1E-7 t_koch08 -->
+                <trajectoryfile>trajectory.csv</trajectoryfile>
+                <seed>123</seed>
+                <injection>*</injection>  <!-- use * for a random injection in kmc simulations in VOTCA, or an id to select a specific injection site. -->
+                <injectionmethod>random</injectionmethod>
+                <numberofcharges>1</numberofcharges>  <!-- 4 t_koch08 -->
+                <fieldX>0</fieldX>
+                <fieldY>0</fieldY>
+                <fieldZ>1000000</fieldZ>
+                <carriertype>hole</carriertype>
+                <temperature>300</temperature>
+                <explicitcoulomb>0</explicitcoulomb>
+                <rates>statefile</rates>
+        </kmcmultiple>
+
+</options>

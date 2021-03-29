@@ -1,0 +1,422 @@
+
+<options>	
+	
+	<debug>false</debug>
+
+	<!-- ############################################################################## --> 	
+	<!-- ### variables for DIPRO // gro_to_DIPRO --> 	
+	<DIPRO>
+		
+		<NCPUS>8</NCPUS>  <!-- Number of CPUS -->
+		<NODE>1</NODE>   <!-- Number of nodes for parallel calculations -->
+		<MEM>8</MEM> <!-- Select the Memory in G09 input.inp. The Memory is given in GB: default MEM=8 -->
+		<QUEUE>default</QUEUE> <!-- select the name of the queue for the evaluation -->
+		<TIME>1</TIME>          <!-- calculation time in hours -->
+		<sub>sub_g09</sub>  <!-- submission: sub=[false,sub_g09,sub_dftb+,run_local_dftb_plus] select the program  sub= 'sub_g09' for Gaussian09 or 'sub_dftb+' for DFTB+ programm package ;  or 'run_local_dftb_plus' for direct local evaluation ; default: sub_g09 -->
+		<g09_SKF_path>/opt/files/DFTB_skf_files/mio-1-1</g09_SKF_path>  <!-- Pathway to g09 SKF files for MIO-1-1  g09_SKF_path='/opt/files/DFTB_skf_files/mio-1-1' -->
+		<dftb_plus_SKF_path>/home/t/t_koch08/dftb+/3ob-3-1/</dftb_plus_SKF_path>  <!-- Pathway to the Slater-Koster-Parameter files for DFTB+ SKF_path='/home/t/t_koch08/dftb+/3ob-3-1/'   ! Slater-Koster-file path for dftb+ files auf edoras ! SKF_path='/home/t/t_koch08/dftb+/mio-1-1/'   ! SKF_path auf edoras -->
+		<dftb_plus_path>/home/t/t_koch08/dftb+/dftbplus-17.1.x86_64-linux/bin/</dftb_plus_path> <!-- Pathway to the DFTB+ executable -->
+		<moment_of_inertia_tensor>0</moment_of_inertia_tensor> <!-- Evaluates the moment_of_inertia_tensor for the DIPRO pair. Caution Programm needs to be compiled with LAPACK! default: moment_of_inertia_tensor =0 --> 
+		
+	</DIPRO>
+	
+	<DIPRO_pair>
+		<!-- DO NOT use read_DIPRO_gro=1 and read_DIPRO_xyz=1 at the same time ! -->
+		<!--  monomerA and monomerB are selected by resid1 and resid2 from gro_inputfile (read_DIPRO_gro=1).  -->
+
+		<read_DIPRO_gro>1</read_DIPRO_gro>   <!-- Reads the data for a DIPRO calculation from the following section, if read_DIPRO_pair=1 ; default: read_DIPRO_pair=0 => OFF! -->
+		<gro_inputfile>../out_equi_2000ps_500k_def2_theta_75_G0_V1.gro</gro_inputfile>  <!-- INPUT morphology.gro -->
+		
+		<residA>1</residA>         <!-- Resid from molecule A -->
+		<typeA>DIPBI</typeA>         <!-- Molecular type from molecule A -->
+		<residB>2</residB>       <!-- Resid from molecule B -->
+		<typeB>DIPBI</typeB>         <!-- Molecular type from molecule B -->
+		<calculation_method>PM3</calculation_method>  <!-- Identify method for the folder. Caution: Do not use * or / here! -->
+		<g09_inputline> B3LYP/6-31G* SCF(XQC,MaxConventionalCycles=400,MaxCycle=800) </g09_inputline>  <!-- g09 inputline -->
+		<trajstep>0</trajstep>  <!--  Morphology counter ###Auswahl des Schrittes der Geometrie in gro-file == GeoStep -->
+		<Num>0</Num>            <!--  DIPRO calculation counter ###urchzaehlen der Ordnungsrechnungsnummer -->
+		
+		<!--  monomerA and monomerB are selected by monomerA.xyz and monomerB.xyz  (read_DIPRO_xyz=1).  -->
+		<read_DIPRO_xyz>0</read_DIPRO_xyz>   <!-- Reads the data for a DIPRO calculation from the following section, if read_DIPRO_xyz=1 ; default: read_DIPRO_xyz=0 => OFF! -->
+		<monomerAxyz>DIPRO/Dim_DPBIK_DPBIK_38_449_PM3_G0_N0_from_gro/molA/DPBIK_38.xyz</monomerAxyz> <!-- coordinates e.g. monomerA.xyz -->
+		<monomerBxyz>DIPRO/Dim_DPBIK_DPBIK_38_449_PM3_G0_N0_from_gro/molB/DPBIK_449.xyz</monomerBxyz> <!-- coordinates e.g. monomerB.xyz -->
+	</DIPRO_pair>
+	<!-- #################################################################### --> 	
+
+	<lambda_in_pair>
+		<extra_SP_lambda_in>0</extra_SP_lambda_in>  <!-- create a number of extra g09 scf files for calculations on optimized structures, as the SCF energies may differ  SCF_x_Opt_x_ with x=[n,el,lo] ; [default: extra_SP_lambda_in=false.] -->
+		
+		<!-- DO NOT use read_lambda_in_gro=1 and read_lambda_in_xyz=1 at the same time ! -->
+		<!--  monomerA and monomerB are selected by resid1 and resid2 from gro_inputfile (read_lambda_in_gro=1).  -->
+		
+		<read_lambda_in_gro>1</read_lambda_in_gro>   <!-- Reads the data for a lambda_in calculation from the following section, if read_lambda_in_pair=1 ; default: read_lambda_in_pair=0 => OFF! -->
+		<gro_inputfile>../out_equi_2000ps_500k_def2_theta_75_G0_V1.gro</gro_inputfile>  <!-- INPUT morphology.gro -->
+		<residA>6253</residA>         <!-- Resid from molecule A -->
+		<typeA>p3ht</typeA>         <!-- Molecular type from molecule A -->
+		<residB>5985</residB>       <!-- Resid from molecule B -->
+		<typeB>p3ht</typeB>         <!-- Molecular type from molecule B -->
+		<calculation_method> g09_DFTB </calculation_method>  <!-- Identify method for the folder. Caution: Do not use * or / here! -->
+		<g09_inputline>  DFTB  </g09_inputline>  <!-- g09 inputline  B3LYP/6-31G* SCF(XQC,MaxConventionalCycles=400,MaxCycle=800)-->
+		<trajstep>0</trajstep>  <!--  Morphology counter ### Auswahl des Schrittes der Geometrie in gro-file == GeoStep -->
+		<Num>0</Num>            <!--  lambda_in calculation counter ### Durchzaehlen der Ordnungsrechnungsnummer -->
+
+		<!--  monomerA and monomerB are selected by monomerA.xyz and monomerB.xyz  (read_lambda_in_xyz=1).  -->
+		<read_lambda_in_xyz>0</read_lambda_in_xyz>   <!-- Reads the data for a lambda_in calculation from the following section, if read_DIPRO_xyz=1 ; default: read_lambda_in_xyz=0 => OFF! -->
+		<monomerAxyz>lambda_in/Ethan/Ethan_A.xyz</monomerAxyz> <!-- coordinates e.g. monomerA.xyz -->
+		<monomerBxyz>lambda_in/Ethan/Ethan_B.xyz</monomerBxyz> <!-- coordinates e.g. monomerB.xyz -->
+	</lambda_in_pair>
+
+
+
+	<!-- ### ########################################################################### --> 	
+	<lambda_out_dE_out>
+			<neighbourlist_filename>data/new_sorted_neighbours_equi_2000ps_500k_def2_theta_75_G0.ngh</neighbourlist_filename>
+			<gro_inputfile>data/equi_2000ps_500k_def2_theta_75_G0.gro</gro_inputfile>  <!-- INPUT morphology.gro -->
+			<residA>1</residA>         <!-- Resid from molecule A -->
+			<typeA>DIPBI</typeA>         <!-- Molecular type from molecule A -->
+			<residB>2</residB>       <!-- Resid from molecule B -->
+			<typeB>DIPBI</typeB>         <!-- Molecular type from molecule B -->
+			<calc_lambda_out_entire_box>0</calc_lambda_out_entire_box>                                          <!--  Berechnung von allen resids fuer die Wahl von resid1  -->
+			<calc_lambda_out_single_pair>0</calc_lambda_out_single_pair>                                          <!--  Berechne nur ein Paar: resid1 resid2  -->
+			<calc_lambda_out_nearest_neighbours_list_NN_max>0</calc_lambda_out_nearest_neighbours_list_NN_max>         <!--  Beschrenkung auf eine feste Anzahl an Nachbarn z.B. N_NN_max=12 (Empfohlen)  -->
+			<calc_lambda_out_r_cut_NN>0</calc_lambda_out_r_cut_NN>                                             <!--  Berechne die Naechsten Nachbarn anhand eines Abstandskriterium: r_cut_NN ( Nicht verwechseln mit r_cut_lambda_out  -->
+			<calc_lambda_out_nearest_neighbours_list_all>0</calc_lambda_out_nearest_neighbours_list_all>                  <!--  Berechne fuer alle moeglichen Nachbarn in der Liste lambda_out. (Kann sehr lang werden)  -->
+			<calc_molpol>0</calc_molpol>             
+			<select_calc_molpol>" alpha "</select_calc_molpol>                              <!-- '  calc_molpol: alpha   'r_cut_lambda_out  Gesamtkugel fuer Berechnung von calc_molpol mit modus=[alpha, r_cut ,all ]  -->
+			<r_cut_lambda_out>36.0</r_cut_lambda_out>                   <!--  In Angstroem. Gesamtkugel fuer Berechnung von lambda_out   -->
+			<r_cut_NN>16.0</r_cut_NN>                                 <!--  In Angstroem. Maximale Umkreis der naechsten Nachbarn, ob Paar berechnet werden soll.  -->
+			<N_NN_max>12</N_NN_max>                                  <!--  Anzahl der naechsten Nachbarn fuer die zu resid1 die zweite resid gefunden werden soll. default N_NN_max:12 -->
+	</lambda_out_dE_out>
+	<!-- ### ########################################################################### --> 	
+	
+	
+	<!-- ################################################################################################ --> 	
+	<!-- ####   Defaults variables for calc_current_I_from_kmc_data  / current_I_form_votca_sql_data #### --> 	
+	<calc_current_I>
+		<calc_local_current_dr>1</calc_local_current_dr> <!--  calc_local_current_dr=true chooses the current equation to VOTCA manual eq.2.43 -->
+		<scale_to_interval_0_1>0</scale_to_interval_0_1> <!--  scale the current to the intervall between [0,1] for a better visualization of the local currents -->                                                                                                              
+		<make_current_to_cubefile>1</make_current_to_cubefile> <!-- create a *.cube file for the total current densiity inside the simulation box, with Ix, Iy, Iz the currrent components and I_tot for the total current -->                                                                                                        
+		<!-- settings for the scaling of current I and the occupation numbers p_occ. -->
+		<use_logscale_I>1</use_logscale_I>          <!-- calc log10(abs(I)) -->                                                                                                                           
+		<use_logscale_p_occ>1</use_logscale_p_occ>  <!--  ## calculate log10 from p_occ for the displayed occupation numbers default: use_logscale_p_occ -->                                                                                                                  
+		<make_scale_p_occ_pdb>1</make_scale_p_occ_pdb> <!-- ## creates a *.pdb file with points in a row, which can form a coloured / colour-coded bar. -->
+																		  
+		<N_occ_scale_points>100</N_occ_scale_points> <!--  ## Number of points in the occupation scale file,  default: 100;  use make_scale_p_occ_pdb=1  -->
+		<make_scale_I_pdb>1</make_scale_I_pdb>       <!--  ## creates a *.pdb file with points in a row, which can form a coloured bar. -->                                                                                                                  
+		<N_I_scale_points>100</N_I_scale_points>  <!--  ## Number of points in the occupation scale file,  default: 100;  use make_scale_I_pdb=1  -->
+		<current_only_use_sites_with_highest_contributions>1</current_only_use_sites_with_highest_contributions> <!--  print only the sites with the highes current to the overall current to the *.pdb files --> 
+		<occupations_only_use_sites_with_highest_contributions>1</occupations_only_use_sites_with_highest_contributions>  <!--  print only the sites with the highes occupation numbers to the *.pdb files --> 
+		<calc_high_current_pathway>0</calc_high_current_pathway>             <!-- DO NOT use this, to calculate the current pathways. Programm does a random walk and selectes ways with the highest current. The backward direction is blocked afterwards, so no connection/jump is travelled twice. default=0 -->                                                                                                     
+		<read_reference_grofile>1</read_reference_grofile>                   <!-- read the reference data from a gro_file -->                                                                                                              
+		<wrap_all_molecules_into_the_box>1</wrap_all_molecules_into_the_box> <!-- use periodic boundary conditions to transfer all molecules, which reach out of the simulation box and move them into the box. -->
+		
+		<scale_J_vmd_factor>10.0</scale_J_vmd_factor> <!--    ## for the visualization in vmd. default: scale_J_vmd_factor=1.0   --> 
+		
+		<J_max_percent_cutoff>0.95</J_max_percent_cutoff>         <!--    #### 0.0001   ;  0.9  ; [0.0,1.0]  e.g. J_max_percent_cutoff=0.9 only the highest  currents 10% are printed. J_max_percent_cutoff=1.0 => All are printed  -->
+		<p_occ_max_percent_cutoff>0.95</p_occ_max_percent_cutoff> <!--    ####    highest 95 => highest 5 % of occupation numbers are printed -->
+		
+		<scalebox>0.025</scalebox>  <!-- ## scalefactor for partitioning of boxes. scalefactor = [0,1]  for the durrent density plots   ## good value: scalebox=0.03 DIPBI/P3HT  ## only change small scale eg: 0.025 P3HT  -->
+
+		<set_filenames>0</set_filenames>  <!-- set the following file names here in the *.xml file, instead of reading them from the command line -->
+		<gro_inputfile>my_grofile.gro</gro_inputfile>  <!-- ####grofile data for pdb with current or occupation data in the occupation column --> 	
+		<current_I_out_filename>my_current_I_out_arrow_vmd.dat</current_I_out_filename>
+		<tot_occ_filename>tot_occ_filename.dat</tot_occ_filename>
+		<marcus_rate_filename>marcus_rate_statefile.dat</marcus_rate_filename>
+		<no_box_COM_file>no_box_COM_filename.dat</no_box_COM_file>
+		<current_I_out_filename>my_current_I_out_arrow_vmd.dat</current_I_out_filename>
+		<votca_sql_name>state.sql</votca_sql_name>
+	</calc_current_I>
+	<!-- ####  end variables for calc_current_I_from_kmc_data / current_I_form_votca_sql_data--> 	
+	<!-- ############################################################################### --> 	
+
+
+	
+	
+	
+<!-- ############################################################################### -->
+<!-- ### Defaults for rates_to_votca_sqlfile  -->
+	<rates_to_VOTCA_sqlfile>
+				 <DIPBI_P3HT_calc>0</DIPBI_P3HT_calc>
+				 <DIPBI_P3MT_calc>0</DIPBI_P3MT_calc>
+				 <P3HT_pur_calc>0</P3HT_pur_calc>
+				 <P3MT_pur_calc>0</P3MT_pur_calc>
+				 <PPDI_PBDT_TS1_calc>0</PPDI_PBDT_TS1_calc>
+				
+				 <N_Neighbours>13</N_Neighbours> <!-- ## Number of neighbours in the neighbourlistfile -->
+
+				<!-- ## multigeo dafault: multigeo_setup=0  -->
+				 <multigeo_setup>0</multigeo_setup>
+				<!-- ## default: Geo_Step=0 for multigeo_setup. Usually parameter is extracted from input data _G${Geo_step} in *.gro file -->
+				<Geo_Step>0</Geo_Step>
+				<rate_type>marcus</rate_type>    <!-- ## rate_type = "jortner" or "marcus" or "weiss_dorsey"  -->
+				<set_dE_out_and_l_out_to_zero>0</set_dE_out_and_l_out_to_zero> <!-- ## set all outer_sphere contributions to zero dE_out und lambda_out, overrides all other cases. default:  set_dE_out_and_l_out_to_zero=1 == ON! -->
+				<set_J_AB_intermolecular_to_zero>0</set_J_AB_intermolecular_to_zero>  <!-- ## set all J_AB_intermolecular to zero. Only check intramolecular transport. default: set_J_AB_intermolecular_to_zero=0  -->
+				 
+
+				<!-- ## Kondo parameter alpha for weiss-dorsey rate   -->
+				<!-- ## Asadi. et A. Nature Com. 2013  -->
+				<!-- ## default: Votca Kondo=4.0 ; rr-P3HT = 3.6 ; rr-P3HT doped 6.75    -->
+				<Kondo>4.0</Kondo>
+
+				<!-- ###Default: TEST_RATES=0 only evaluates rates with selected properties.  -->
+				 <TEST_RATES>0</TEST_RATES>
+				 <set_filenames>0</set_filenames>    <!--  read the following file names listed here for reference data default=0 => OFF-->
+				 <l_out_filename>data/l_out_filename.dat</l_out_filename>  <!--  ##!'l_out_filename_P3HT_pur_1000ps_900K_65_G0_add_H_not_virtual.dat' -->
+				 <E_multipole_filename>data/E_out_filename.dat</E_multipole_filename> 
+				 <J_AB_filename>data/Datenauswertung_SAB_H_H0_Jab_H0_H0_SAB_L0_L0_Jab_L0_L0_G0.dat</J_AB_filename>
+				 <l_in_h_filename>0</l_in_h_filename>   <!-- Filename for matrix with lambda_in data  for holes -->
+				 <l_in_e_filename>0</l_in_e_filename>   <!-- Filename for matrix with lambda_in data  for electrons -->
+				 <dE_in_h_filename>0</dE_in_h_filename> <!-- Filename for matrix with internal site-energy difference  data  for holes -->
+				 <dE_in_e_filename>0</dE_in_e_filename> <!-- Filename for matrix with internal site-energy difference  data  for electrons -->
+				
+				<!-- ## J_AB   -->
+				 <Read_J_AB_from_sql_file>0</Read_J_AB_from_sql_file>   <!-- Reads the JAB values from the votca state.sql file e.g. the ZINDO/MOO data. -->
+				 <Read_J_AB>1</Read_J_AB>  <!-- Reads the Data from a DIPRO data dile given with J_AB_filename  [default: Read_J_AB=.true.] -->
+
+				<!-- ## Parametrized for DIPBI:P3MT [3mer,5mer,7mer]                             -->
+				<!-- ## Scaling J_AB(y) = f(x) * J_AB                                            -->
+				<!-- ## Available methods:   y_scale_method=[CDFT,PBE/6-311G**,B3LYP/3-21G,PM3]  -->
+				<!-- ## Available methods:   x_scale_method=[PBE/6-311G**,ZINDO,PM3,DFTB/MIO,DFTB/3OB,B3LYP/3-21G*,B3LYP/6-31G*,B3LYP/6-311G**]   -->
+				<!-- ## Caution, not all combinations are implemented.   -->
+				<scale_dipro_results>1</scale_dipro_results>  <!-- scale_dipro_results default= .false. -->
+				<linear_scaling_J_AB>0</linear_scaling_J_AB>  <!-- linear_scaling_J_AB default= .false. -->
+				<x_scale_method>PM3</x_scale_method>
+				<y_scale_method>CDFT</y_scale_method>
+
+
+				<!-- ## Can read the geometric data from the J_AB_file and evaluate the matrix element J_AB via a linear fit from the geomentic data.                     -->
+				<!-- ##                                                                                                                                                   -->
+				<!-- ## Use a method in the list: J_AB_fit_method_geometry=[MA,MMA,COM_H,Lin_Combi]                                                                       -->
+				<!-- ## MA = minimal distance, MMA = mean minimal distance,  COM = center of mass distanc, COM_H = center of mass distance with hydrogen atoms included,  -->
+				<!-- ## Lin_Combi: Use a linear combination for a fit of MA,MMA,COM_H to obtain a value for J_AB_hole, J_AB_elec                                          -->
+				 <Read_COM_COM_H_MA_MMA_theta_Data_from_J_AB_file>0</Read_COM_COM_H_MA_MMA_theta_Data_from_J_AB_file>    <!-- Read_COM_COM_H_MA_MMA_theta_Data_from_J_AB_file default= .false. -->
+				 <J_AB_fit_method_geometry>Lin_Combi</J_AB_fit_method_geometry>
+
+				<!-- ## min distvector with subhopping sites  -->
+				<use_min_d_COM_vector_list>0</use_min_d_COM_vector_list><!-- use_min_d_COM_vector_list   default= .false. uses the COM distance. -->
+				<min_d_modus>COM</min_d_modus>  <!-- min_d_modus = [COM, MA, MMA, RCOM] Calculate the intermolecular distance e.g. in rates default: min_d_modus = COM  -->
+				
+				
+				 <print_data_collection_files>0</print_data_collection_files> <!-- default= 0 = false -->
+				 <mobility_estimate>0</mobility_estimate>  <!-- Linerar estimate for the charge carrier mobility using Einstein-Relation. Note: It is a poor guess. default: .false. -->
+				 <make_Histogramm>0</make_Histogramm>       <!-- create a histogramm default: .false. -->
+
+				<!-- ## Intramolecular   -->
+				<read_intramolecular_data>1</read_intramolecular_data>  <!--  read_intramolecular_data=.true.  -->
+				<!-- ## uses cosfit for | J_AB(el)| and scaled dE_intra_el=-0.65* dE_intra_lo  ###default=0  -->
+				<use_fit_intramolecular>0</use_fit_intramolecular>
+				<!-- ## use vertical energy gap from CDFT dE_vert_CDFT to approximate the dE_in_AB=dE_A_in -dE_B_in  ###default=0  -->
+				<use_dE_in_AB__approx__dE_vert_CDFT>1</use_dE_in_AB__approx__dE_vert_CDFT>   <!-- default: .true. -->
+				
+				<Use_reference_data_from_P3HT32mer>0</Use_reference_data_from_P3HT32mer>   <!-- default: .false. -->
+				<use_lambda_out_random_number_Gauss_distribution_data>0</use_lambda_out_random_number_Gauss_distribution_data>	  <!-- default: .false. -->
+				<Read_l_out>0</Read_l_out> <!-- read lambda out data from an input file default: Read_l_out=0  => OFF! -->
+				<!-- ## E_multiiplote with Thole model for electrostatic contributions dE  -->
+				<Read_E_multipole_out>0</Read_E_multipole_out>  <!-- default: .false. -->
+				<!-- ## Gaussian distribution for P3HT or DIPBI data for lam_out and E_out:  E_out_randomized_distribution=.false.  -->
+				<E_out_randomized_distribution>0</E_out_randomized_distribution>  <!-- default: .false. -->
+				<!-- ## outer-sphere contributions center and standard deviation, if contributions from random numbers are take into account -->
+				
+						<l_out_h>0.0</l_out_h>
+						<l_out_e>0.0</l_out_e>
+						<sig_l_out_h>0.0</sig_l_out_h>
+						<sig_l_out_e>0.0</sig_l_out_e>
+						
+						<E_out_h>0.0</E_out_h>
+						<E_out_e>0.0</E_out_e>
+						<sig_E_out_h>0.0</sig_E_out_h>
+						<sig_E_out_e>0.0</sig_E_out_e>
+				
+	</rates_to_VOTCA_sqlfile>
+<!-- ###Defaults for rates_to_votca_sqlfile  -->
+<!-- ##############################################################################		 -->
+
+		<!--################################################################################################################### -->
+		<!--   options for    enumerated_gro_to_VOTCA_DIPBI_P3HT_prepare.f90                                                    -->
+		<!--################################################################################################################### -->
+		<enumerated_gro_to_VOTCA_DIPBI_P3HT_prepare>
+
+				<debug>0</debug>  <!-- DEBUG=.false. -->
+
+				<!--system-->
+					<DIPBI_P3HT_calc>1</DIPBI_P3HT_calc>       <!-- DIPBI_P3HT_calc=.true.  -->
+					<DIPBI_P3MT_calc>0</DIPBI_P3MT_calc>       <!-- DIPBI_P3MT_calc=.false. -->
+					<PPDI_PBDT_TS1_calc>0</PPDI_PBDT_TS1_calc> <!-- PPDI_PBDT_TS1_calc=.false. -->
+					<KETTE>1</KETTE>   <!-- KETTE=.true. -->
+					
+					<lambda_in_all_inputfile>./data/lambda_in_all_DIPBI_P3MT_B3LYP_6_311Gss_eV.dat</lambda_in_all_inputfile> <!--lambda_in_all_inputfile>='./data/lambda_in_all_DIPBI_P3MT_B3LYP_6_311Gss_eV.dat' -->
+					<votca_xml_options_filename>./options_cpt_run_DIPBI_P3HT_inter_and_intra_h.xml</votca_xml_options_filename>
+					<neighbourlist_filename>data/new_sorted_neighbours_equi_2000ps_500k_def2_theta_75_G0.ngh</neighbourlist_filename>
+					
+				<!--/system-->
+
+
+				<modify_mol_h_atoms>1</modify_mol_h_atoms>      <!-- modify_mol_h_atoms=.true. -->
+				<create_mapping_file>1</create_mapping_file>    <!-- create_mapping_file=.true. -->
+				<create_fake_topology>1</create_fake_topology>  <!-- create_fake_topology=.true. -->
+				<create_votca_boxfile>1</create_votca_boxfile>  <!-- create_votca_boxfile=.true. -->
+				<create_molpol_options_files>0</create_molpol_options_files> <!-- create_molpol_options_files=.false. -->
+				<create_gromp_mdp_file>1</create_gromp_mdp_file>   <!-- create_gromp_mdp_file=.true. --> 
+				<create_jobwriter_single_sites_file>1</create_jobwriter_single_sites_file>  <!-- create_jobwriter_single_sites_file=.true. -->
+				<create_jobwriter_pairs_pewald3d_file>1</create_jobwriter_pairs_pewald3d_file>  <!-- create_jobwriter_pairs_pewald3d_file=.true. -->
+				<create_mps_tab>1</create_mps_tab>  <!-- create_mps_tab=.true. -->
+
+				<print_coordH_to_xyz>1</print_coordH_to_xyz>  <!--  print_coordH_to_xyz=.true. -->
+
+				<!-- ## Use the HOMO and LUMO levels for ZINDO orbitals  -->
+				<!-- ## Adapt this, if other J_AB than VOTCA MOO/iZINDO method is used  -->
+				<orbs_ZINDO>1</orbs_ZINDO>	   <!--  orbs_ZINDO=.true.   -->
+				<read_lambda_files>1</read_lambda_files>   <!--   read_lambda_files=.true.  -->
+				<!-- ## Adds H atoms at the intrachain P3HT junctions between neighbouring segments, for the treatment of each segement as an entire molecule / site   -->
+				<!-- ## This is relevant for the concordance of the number of atoms in the QM files in *.mps files.  -->
+				<add_virtual_H_atoms_to_gro>0</add_virtual_H_atoms_to_gro>  <!--  add_virtual_H_atoms_to_gro=.false.  -->
+
+				<!-- ## exclude_virtual_H_atoms=.true.   sets virtual H atoms to 1 in <virtual_mps> section => Excludes H in Emultipole calculation   -->
+				<!-- ## exclude_virtual_H_atoms=.false.  sets virtual H atoms to 0 in <virtual_mps> section => Includes H in Emultipole calculation    -->
+				<exclude_virtual_H_atoms>1</exclude_virtual_H_atoms>	<!--	exclude_virtual_H_atoms=.true.   -->
+
+
+				<!-- ## make_geo_orbs_mps_g09  -->
+				<!-- ## extra_files_modus = [false, all, make_g09_for_mps, make_ZINDO, make_xyz, make_folders]    applied in "make_geo_orbs_mps_g09"     -->
+				<!-- ## make_g09_for_mps: creates g09 inputfiles for the geometries to evaluate with data for *.mps files  --> 
+				<!-- ## make_ZINDO: creates g09 input files for the ZINDO calculations, which are needed for *.orbs  -->
+				<!-- ## make_xyz: creates name1_n.xyz for the QC_FILE folder as needed for VOTCA calculations.  -->
+				<!-- ## make_folders: creates folders QC_FILES and MP_FILES, if they are not present in the current directory.  -->
+				<create_geo_orbs_mps_g09>1</create_geo_orbs_mps_g09>  <!-- create_geo_orbs_mps_g09=.true.   -->
+				<extra_files_modus>0</extra_files_modus>  <!-- extra_files_modus="false"   -->
+
+
+				<!-- ###votca_statfile.sql filename: default: state.sql      -->
+				<votca_sql_name>statefile13.sql</votca_sql_name>   <!-- votca_sql_name='statefile13.sql'   -->
+
+				<!-- ###mps.tab filename for background polarization.  default: mps_tab_filename='mps.tab'   -->
+				<mps_tab_filename>mps.tab</mps_tab_filename>   <!--  mps_tab_filename='mps.tab'     -->
+
+
+				<!-- ### default: use_votca_global_file_folder=.false.    -->
+				<!-- ### default: MP_FILES_folder=MP_FILES                -->
+				<!-- ### default: QC_FILES_folder=QC_FILES                -->
+
+				<use_votca_global_file_folder>0</use_votca_global_file_folder>   <!--  use_votca_global_file_folder=.false.  -->
+				<MP_FILES_folder>MP_FILES</MP_FILES_folder>
+				<QC_FILES_folder>QC_FILES</QC_FILES_folder>
+		</enumerated_gro_to_VOTCA_DIPBI_P3HT_prepare>
+		<!--################################################################################################################### -->
+
+	
+	
+	
+	
+	
+	<!--################################################################################################################### -->
+	<!--############# OPTIONS FOR run_kmc_votca_multiple ################################################################## -->
+	<run_kmc_votca_multiple>
+			<N_kMC_random_insertions>4</N_kMC_random_insertions>  <!-- ### number of kmc trajectories default: N_kMC_random_insertions=1 -->
+			<use_random_charge_insejection>True</use_random_charge_insejection>  <!-- ### Start simulations at specific injection sites use_P3HT_charge_insejection, use_DIPBI_charge_insejection default use_random_charge_insejection=True -->
+			<calc_parallel>True</calc_parallel>  <!-- ### calculate many kMC trajectories in parallel. -->
+			<use_my_rates_to_votca_sql>False</use_my_rates_to_votca_sql>  <!-- ### use xtp_createStatefile_fromtxt_t_koch08.py to create sql files -->
+			<!-- ### use kmc_fortran program for kmc simulations e.g. for multicharge kmc simulations with VSSM method. -->
+			<use_kmc_fortran>True</use_kmc_fortran>  <!-- ### read (some) setup data from the votca options.xml file format and the rate data from a votca *.sql file. : Default: use_kmc_fortran=False ==> VOTCA kmc_multiple is used. -->
+			
+			
+			<use_P3HT_charge_insejection>False</use_P3HT_charge_insejection>  <!-- ### default: use_P3HT_charge_insejection=False -->
+			<use_DIPBI_charge_insejection>False</use_DIPBI_charge_insejection>  <!-- ### default: use_DIPBI_charge_insejection=False -->
+			<use_PPDI_charge_insejection>False</use_PPDI_charge_insejection>  <!-- ### default: use_PPDI_charge_insejection=False -->
+			<use_PBDT_TS1_charge_insejection>False</use_PBDT_TS1_charge_insejection> <!-- ### default: use_PBDT_TS1_charge_insejection=False -->
+			<system>DIPBI_P3HT_500K</system>  <!-- ### SYSTEM= DIPBI_P3HT_500K or DIPBI_P3HT_700K, DIPBI_P3HT_900K; or  P3HT_pur ; PPDI_PBDT_TS1 -->
+			<datafiles>
+					<readsystem>1</readsystem>
+					<gro_filename>data/equi_2000ps_500k_def2_theta_75_G0.gro</gro_filename>
+					<neighbourlist_filename>data/new_sorted_neighbours_equi_2000ps_500k_def2_theta_75_G0.ngh</neighbourlist_filename>
+					<no_box_COM_filename>data/no_box_equi_2000ps_500k_def2_theta_75_G0.xyz</no_box_COM_filename>
+					<JAB_filename>data/Datenauswertung_SAB_H_H0_Jab_H0_H0_SAB_L0_L0_Jab_L0_L0_G0.dat</JAB_filename>
+			</datafiles>
+				
+			<modify_rates>False</modify_rates>  <!-- ### adapt the rate calculation e.g. necessary for different U_ext or temperature T -->
+			<rate_type>marcus</rate_type> <!-- ### rate_type = jortner or marcus or weiss_dorsey     or rate_type_scan -->
+			<dump_rates>True</dump_rates>  <!-- ### dump rates to 1 for a certain cutoff -->
+			<cutoff_dump_rate>1.0E-10</cutoff_dump_rate>  <!-- ### Set all rates in *.sql file which are smaller than cutoff_dump_rate to the value: cutoff_dump_rate   default: cutoff_dump_rate=1.0E-15 -->
+			<N_xy_plane>36</N_xy_plane>  <!-- ### also for xy, xz and yz-plane; default: N_xy_plane=36 -->
+	</run_kmc_votca_multiple>
+	<!--################################################################################################################### -->
+
+
+	<!--  VOTCA input -->
+	<rates>
+		<temperature>300</temperature> 			<!-- T [K] -->
+		<field>0 0 1000000</field>    		<!-- field x y z -->
+		<method>marcus</method>                 <!-- 'marcus' or 'jortner' -->
+	</rates>
+
+
+	<!--################################################################################################################### -->
+		<!-- KMC CALCULATORS +++++++++++++++++++++++++++++++++++++ -->
+		<!-- run_kmc_fortran  optionsfile -->
+
+	<kmcmultiple>
+			<runtime unit='integer'>1.0E5</runtime>       <!-- 1E-5 t_koch08 -->
+			<outputtime unit='integer'>1E9</outputtime>   <!-- 1E-7 t_koch08 -->
+					<trajectoryfile>trajectory.csv</trajectoryfile>
+					<seed>500</seed>
+					<injection>*</injection>
+					<injectionmethod>random</injectionmethod>  <!-- run_kmc_fortran: 	###injectionmethod='random'  [default: random] --> 
+										<!--			### injectionmethod = "injection_node"   ; selects a single node for charge injection, set :injection_node as node_id or Resid" -->
+										<!--			### injectionmethod = "injection_node_list" ; selects the nodes from the list below -->
+										<!--			### injectionmethod = "injection_segment_type"  ; select a specific segment type, where the injection starts. Select the starts e.g.  <injection_segment_type>DIPBI</injection_segment_type>  -->
+					<injection_segment_type>DIPBI</injection_segment_type> 
+					<numberofcharges>1</numberofcharges>  <!-- 4 t_koch08 -->
+					<fieldX>0</fieldX>
+					<fieldY>0</fieldY>
+					<fieldZ>1.0E+7</fieldZ>
+					<carriertype>hole</carriertype>
+					<temperature>300</temperature>
+					<explicitcoulomb>0</explicitcoulomb>
+					<rates>statefile</rates>
+			<!-- +++ EXTRA run_kmc_fortran  options: +++ -->
+			<check_hopping_pair_composition>1</check_hopping_pair_composition>   <!-- analysis which sites were occupied in the simulation; default =1 [ON=1,OFF=0]-->
+			<escaperatefile>Escape_Rates</escaperatefile>
+			<makeescaperatefile>0</makeescaperatefile>
+			<debug>0</debug>
+
+			<unite_notes_for_kmc>0</unite_notes_for_kmc> <!-- unite two nodes N1 and N2 to a single node N1*, if only back-and forth rates dominate. default: unite_notes_for_kmc=0  ! OFF -->
+			<unite_nodes_with_same_type>1</unite_nodes_with_same_type> <!-- Two nodes N1 and N2 can only be united if they posses the same type.  default: unite_nodes_with_same_type=1  -->
+			<cutoffk1k2>100</cutoffk1k2> <!-- cutoff to unite two nodes if the k_12 / k_13 > cutoffk1k2 --> 
+
+
+			<!-- +++ KMC META DYNAMICS +++ -->
+			<kmcmetadynamics>0</kmcmetadynamics>      <!--  ## Activate kmc meta dynamics  to improve sampling of improbable transitions (rough energy landscape)   default: kmcmetadynamics=0 ! OFF   -->
+			<alpha>1</alpha>  <!--  alpha = exp{ - 1 / (kB T) }   default: alpha=0.995 -->
+			
+
+			<!-- +++ KMC PATHWAY - High current pathway +++ --> 
+			<calc_pathway>0</calc_pathway>  <!-- Calculate a pathway for high currents, where the charge crosses the box once -->
+			<store_trajectory>0</store_trajectory> <!-- store charge carrier trajectory in *.xyz format;  needed for calc_pathway -->
+			<N_testpathways>1</N_testpathways> <!-- Number_of_calculated_pathways: Number of pathways with high current, which are calculated -->
+			<reset_pathway>1</reset_pathway>   <!-- reset_pathway_at_initial_site: for pathfinder settings: (reset_pathway=1) When calculation the charge carrier trajectory on can reset the system, if a charge comes back to the origin before crossing the simulation box, default: reset_pathway_at_initial_site=0 ; (reset_pathway=0) -->
+			<!--gro_inputfile>gro_HDI_M_out.gro</gro_inputfile>  -->   <!-- gromacs filename *.gro with morphology data -->
+			<gro_inputfile>../data/equi_2000ps_500k_def2_theta_75_G0.gro</gro_inputfile> 
+			
+			<wrap_all_molecules_into_the_box>1</wrap_all_molecules_into_the_box>  <!--  Wrap molecules in *.gro back into the box using periodic boundary conditions.-->
+			<unitePBCsplitmolecule>0</unitePBCsplitmolecule> <!-- unites all molecules if it is unwraped with PBC in the *.gro file -->
+			<cutsidechainsingro>1</cutsidechainsingro> <!-- cut the side chains from the gro file for DIPBI/P3HT, -CH2 groupe for P3HT. --> 
+			<dump_gro_dI_max>1</dump_gro_dI_max> <!-- Write out a gromacs *.gro file for molecules on the pathway with the highest current; only available is a gromacs *.gro file is read. -->
+			
+	</kmcmultiple>
+	<!--################################################################################################################### -->
+	<!-- ++++++++++++++++++  Dijkstra Algorithm  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<dijkstra>
+			
+			<calcpathwayDijkstra>0</calcpathwayDijkstra> <!-- Calculate a high current pathway -->
+			<modus_Dijkstra>Dijkstra_kmcNetwork</modus_Dijkstra> <!-- Keys: 'Dijkstra_kmcNetwork',  'Dijkstra_newNetwork', 'Dijkstra_loadNetwork', 'false' -->
+			<start_Dijkstra>14</start_Dijkstra> <!-- index to start the Dikstra pathway default=10-->
+			<ziel_Dijkstra>41</ziel_Dijkstra>   <!-- index to start the Dikstra pathway default=10-->
+			<writenetworkfiledijkstra>1</writenetworkfiledijkstra>        <!-- write / store the Graph for the Dijkstra evaluation the Dijkstra network file in networkfile_Dijkstra -->
+			<networkfile_Dijkstra>Netztest.txt</networkfile_Dijkstra>     <!-- Dijstra network file -->
+			<calc_pathway_between_zones>1</calc_pathway_between_zones>    <!--   ## Define a zone for inital points and and dublicate it for a second final zone for the target of a box transversing pathway in PBC  [default: alc_pathway_between_zones=.false. ]  -->
+			<loopstartzone>1</loopstartzone> <!-- Loop for all initial nodes in the start zone default: loopstartzone=0 -->
+			<zonenbreite>5</zonenbreite> <!-- Zonenbreite für Start und Endzone in Angstroem default: 5 Ang --> 
+			<log10abs>0</log10abs>  <!-- log10 abs(R) for the evaluation of the pathway with the shortes resistance / highest current flow-->
+	</dijkstra>
+	<!-- +++++++++++++ End  Dijkstra Algorithm  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+	<!--################################################################################################################### -->
+</options>
