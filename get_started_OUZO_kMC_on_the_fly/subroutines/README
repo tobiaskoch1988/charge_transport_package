@@ -5,6 +5,7 @@ aufruf.out can create lambda_in input files for Gaussian09.
 aufruf.out can perform lambda_out calculations using partial charges privided in xyz_q_Dateien/.
 
 Expected folder structure:
+subroutines/aufruf.out
 subroutines/DIPRO
 subroutines/lambda_in 
 subroutines/Oniom
