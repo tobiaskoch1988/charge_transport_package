@@ -1,0 +1,33 @@
+The aufruf.out is called by the python kMC programm kmc_multigeo_V5 or can be started in the command line.
+
+aufruf.out can create DIPRO input files for Gaussian09.
+aufruf.out can create lambda_in input files for Gaussian09.
+aufruf.out can perform lambda_out calculations using partial charges privided in xyz_q_Dateien/.
+
+Expected folder structure:
+subroutines/DIPRO
+subroutines/lambda_in 
+subroutines/Oniom
+subroutines/xyz_q_Dateien
+
+Note: You can compile 
+gfortran charge_transport_package -o aufruf.out
+OR
+gfortran gro_to_DIPRO_P3HT_DIPBI_PPDI_V4.f90 -o aufruf.out
+to obtain similar functionality.
+
+
+Start DImer PROjection method
+aufruf.out  DIPRO equi_2000ps_500k_DIPBI.gro 38 DIPBI 449 DIPBI B3LYP-6-31Gs 1 2   false " B3LYP/6-31G* SCF(XQC,MaxConventionalCycles=400,MaxCycle=800) "
+  
+
+  Use: method ursprung.gro resid1 type1 resid2 type2 calculation_method  GeoStep Number [sub_g09/sub_dftb+] g09_inputline
+  Example: DIPRO equi_2000ps_500k_DIPBI.gro 38 DIPBI 449 DIPBI B3LYP-6-31Gs 1 2   false " B3LYP/6-31G* SCF(XQC,MaxConventionalCycles=400,MaxCycle=800) "
+  
+  [sub_g09=true/sub_g09, selects g09]
+  [       =sub_dftb+ selects submission for DIPRO via dftb+ programm package]
+  [       =dftb+ creates dftb+ file system without submission ]
+  lambda_in equi_2000ps_500k.gro 38 DIPBI 449 DIPBI UFF 1 1 true "UFF(QEq)" 
+  
+  lambda_out .......................... partial chargename r_cut(Ang) Number_neighbours Resid_list_neighbours
+  lambda_out indexed.gro 38 DIPBI 449 DIPBI PM3 3 3 false "PM3" mulliken el 15.00 6 45 43 50 638 752 1104
