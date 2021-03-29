@@ -1,0 +1,42 @@
+Programms, which are called by aufruf.out, which can generate lambda_in calculations using the Oniom for P3HT:DIPBI.
+
+Use:
+aufruf.out lambda_in_oniom  equi_2000ps_500k.gro 38 DIPBI 449 DIPBI PBE0_6-31Gs_UFF  1 1 true    "  oniom(PBE0/6-31G*:UFF(QEq)) Opt(Tight,MaxMicroiterations=50000)"  6-31G#_CHelpG  el    6 45 43 50 638 752 1104  
+OR
+
+
+charge_transport_package lambda_in_oniom  gromacsinput.gro     Resid1  Resname1   Resid2   Resname2    foldername       _N   _G   submission    "  Gaussian09-Inputline  "                                           Folderfor_partial_charges   el/lo   NumberofNeighbours     List with Resids of neighbours                                                                            
+charge_transport_package lambda_in_oniom  equi_2000ps_500k.gro 38      DIPBI      449      DIPBI       PBE0_6-31Gs_UFF    1   1   true          "  oniom(PBE0/6-31G*:UFF(QEq)) Opt(Tight,MaxMicroiterations=50000)"  6-31G#_CHelpG               el      6                      45 43 50 638 752 1104  
+
+The foldername identifies the calculation. 
+_N counts the charge transfer pairs.
+_G counts the morphology frame.
+
+
+lambda_in_setup_on_the_fly_oniom.sh
+The calculations are implemented as an 'on-the-fly'-method.
+The scripts sub-myg09-lambda_in_Kankra.sh  or   sub-myg09-lambda_in_moria.sh aid to submit the calculations on the clusters (Which need to be adapted by a new user).
+
+
+GENERATE THE INPUT FILES
+Usage: ./lambda_in_setup_on_the_fly_oniom.sh < monomerA.xyz monomerB.xyz inputline foldername zieldatei run_lambda_in subg09_logical oniom  >
+Bsp. ./lambda_in_setup_on_the_fly_oniom.sh MolA.xyz MolB.xyz "UFF  Opt(Tight,MaxMicroiterations=30000) " MolA_MolB_B3LYP_6-31G+ results_lambda_in.dat run_lambda_in.sh true oniom
+ logical=true fuer sofortiges Submittieren
+
+SUBMISSION
+sub-myg09-lambda_in_Kankra.sh  sub-myg09-lambda_in_moria.sh
+  
+
+RUN GAUSSIAN09 CALCULATIONS AND EVALUATE lambda_in OR lambda_in_ONIOM
+The script run_lambda_in_V3.sh is intended to be called by aufruf.out.
+
+Usage:  ./run_lambda_in_V3.sh monomerA monomerB foldername lambda_in_results.dat oniom_ok=[oniom/false] use_reiterations=[true/false] sub_g09=[sub_g09/false] 
+Execute ./run_lambda_in_V3.sh in foldername/./run_lambda_in_V3.sh
+Provide the name for monomerA.
+Provide the name for monomerB.
+Provide the foldername.
+The output data will be stored in lambda_in_results.dat. 
+Use oniom for Oniom calculations (Handles the Freeze lists of atoms in the enviroment).
+One can use the use_reiterations, where the initial structures where optimised structures in neutral, negative, positive charged state of a molecule in order to restart a failed calculation automatically.
+sub_g09 can use a submission to the HPC cluster. 
+
