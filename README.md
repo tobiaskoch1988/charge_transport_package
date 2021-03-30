@@ -37,9 +37,9 @@ run_kmc_votca_multiple_V3.sh  helps to handle multiple kMC simulations.
 A short summary how to start each calculator is provided in kMC_Anleitung_Kurzfassung.pdf.
 Note that many programmes expect the folder structure given here. 
 
- =================================
- |   charge transport package    |
- =================================
+
+-----charge transport package-----
+
 If you want to use charge_transport_package for DIPRO calculations you need to 
 1) Delete the ! in before !CALL DSYEV in  charge_transport_package.f90 
 and compile with LAPACK and BLAS package:
@@ -53,7 +53,7 @@ and compile with LAPACK and BLAS package:
  Dijkstra_newNetwork
  Dijkstra_loadNetwork
  KMC_FOR_MULTIPLE_CHARGES
- KMC_FOR_MULTIPLE_CHARGES_xml      use votca optionsfile for kmc run options
+ KMC_FOR_MULTIPLE_CHARGES_xml   
  gro_to_VOTCA
  rates_to_VOTCA_sqlfile
  calc_current_I
