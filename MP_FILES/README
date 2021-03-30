@@ -1,0 +1,7 @@
+Use the *.mps files to evaluate outer-sphere contributions using VOTCA emultipole/xmultipole or eoutersphere calcualtors.
+The *.mps files with partial charges and (unscaled) polarisabilities for all atoms.
+The data is based on SCF calculations PBE0/6-31G* using CHelpG.
+It is processed by LOG2MPS routine in VOTCA.
+All files are provided for the neutral _n ; positivly charged _h ; negativly charged molecules _e.
+The DPBIK files are applied for DIPBI including the aliphatic site chains.
+The P3HT files PHXXA_x.mps are given for the segment length 01 to 32 with for saturated segments with hydrogen atoms at the linging segment-segment junctions (A)
