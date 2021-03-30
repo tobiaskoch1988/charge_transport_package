@@ -1,0 +1,34 @@
+MD FILES and some data, 
+
+
+1) create GROMACS *.tpr'
+      /opt/gromacs-5.0.4-d-WP/bin/grompp_d  -c gromacs_outputfile.gro   -p  fake_topology_ gromacs_outputfile.top  -f   gromp.mdp
+2) GROMACS *.tpr'
+    /opt/gromacs-5.0.4-d-WP/bin/mdrun_d  -s topol.tpr -x  gromacs_outputfile.xtc 
+
+
+TOPOLOGY --------
+Provides the sequence of segments in the partitioned polymer chains.
+The fake_topology.top file is created by the charge_transport_package and provides the sequence of the polymer chain with including the segmentation.
+  fake_topology_equi_2000ps_500k_def2_theta_75_G0.top
+
+*itp files are included in the *.top file
+DPBIK_raw.itp
+
+P3HT segments are gives for each chain length found PHXXS.mps
+A P3HT segment can be 
+  S Start
+  M Middle
+  E End
+  A all atom (n=32) 
+of the 32mer chain.
+
+For instance a single P3HT segment with n=1 can be one of
+  PH01S_raw.itp
+  PH01M_raw.itp
+  PH01E_raw.itp
+  
+  
+ The file gromp.mdp only performs a single MD-Step to unite the files 
+ gromacs_outputfile.gro  and fake_topology_ gromacs_outputfile.top and obtain the  topol.tpr file.
+-----------------------------------------------------------------
