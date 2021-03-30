@@ -1,0 +1,5 @@
+Here you can provide the *.orbs files for ZINDO/MOO calculations using VOTCA.
+They are generated with ZINDO using Gaussian09 and as fort.7 files.
+Moreover one needs to provide *.xyz for every segment size or molecule in the system.
+DPBIK_n.xyz includes the side chains for DIPBI.
+PH01A_n.xyz to PH32A_n.xyz are P3HT with different chain length.
