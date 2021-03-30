@@ -1,0 +1,32 @@
+Provide data for the system here.
+e.g.
+The partitioned gromacs morphology file: equi_2000ps_500k_def2_theta_75_G0.gro
+
+hopping-site centers, where all sites are inside the orthorombic simulation box.
+no_box_equi_2000ps_500k_def2_theta_75_G0.xyz
+
+new sorted neighbourlist:
+new_sorted_neighbours_equi_2000ps_500k_def2_theta_75_G0.ngh
+
+JAB_intermolecular: charge transfer integrals using DIPRO calculations.
+Datenauswertung_SAB_H_H0_Jab_H0_H0_SAB_L0_L0_Jab_L0_L0_G0.dat
+
+J_AB_intra:
+spline_interp_2mere_P3HT_electron
+spline_interp_2mere_P3HT_hole
+
+dE_intra:
+energie_p3mt_daten_electron
+energie_p3mt_daten_hole
+
+lambda_in:
+lambda_in_all_DIPBI_P3MT_B3LYP_6_311Gss_eV.dat
+
+l_out:
+lambda_out_id_seg1_seg2_lOh_lOe_DIPBI_P3HT32mer.dat
+lambda_out_no_virtual_H_id_seg1_seg2_lOh_lOe_votca_equi_2000ps_500k_def2_theta_75_G0.dat
+
+dE_out:
+E_out_emultipoles_DIPBI_P3HT32mers.dat
+E_out_emultipoles_DIPBI_P3HT_500K_virtual_H_atoms.dat
+
