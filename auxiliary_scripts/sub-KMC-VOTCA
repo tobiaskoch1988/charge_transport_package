@@ -1,0 +1,220 @@
+#!/bin/bash
+
+if [ $# -le 5 ]; then
+   echo "Usage: $0 options_VOTCA_kMC_file   kMC_VOTCA_startline   Modus=[single,singleUx,singleUy,singleUz,increasing/multidirection/multidirection_scaled]  U_ext  NCPUS && NODE && QUEUE && TIME && DEPEND"
+	echo " My_job_kmc options.xml  state.sql  single   1.0E+6  8  1 moria 160 "
+   exit 1
+fi
+
+#if [ ! -f "$1" ]; then
+#   echo "File $1 doesn't exist!"
+#   exit 1
+#fi
+
+JOB=${1}      ####$( basename $( basename ${1} .com) .inp) 
+
+
+VOTCA_multiple_file='run_kmc_votca_multiple_V3.sh'
+### default settings
+kMC_options_file='options.xml'
+kMC_statefilename='state.sql'
+Modus="single"
+U_ext="1.00E+07" ### V/M
+
+NCPUS=8
+NODE=1
+DEPEND="#" 
+CURDIR=`pwd`
+QUEUE=batch
+TIME=210
+declare -i copy_ok=0
+[ $# -eq 6 ] && NCPUS=$6
+
+[ $# -eq 7 ] && NCPUS=$6 && NODE=$7
+
+[ $# -eq 8 ] && NCPUS=$6 && NODE=$7 && QUEUE=$8
+
+[ $# -eq 9 ] && NCPUS=$6 && NODE=$7 && QUEUE=$8 && TIME=$9
+
+[ $# -eq 10 ] && NCPUS=$6 && NODE=$7 && QUEUE=$8 && TIME=$9 && DEPEND="#PBS -W depend=afterany:${10}"
+
+if [ $# -eq 0 ]; then
+    echo "Usage: $0 options_VOTCA_kMC_file kMC_VOTCA_startline Modus=[single,singleUx,singleUy,singleUz,increasing/multidirection/multidirection_scaled]  U_ext  NCPUS && NODE && QUEUE && TIME && DEPEND "
+    echo "Example $0 JOBNAME options.xml  state.sql single 1.0E+7 "
+    exit 1
+fi
+
+if [ $# -ge 1 ]; then   ## Einlesen des Starts des KMC-Programmes mit einer Rechnung oder standard
+    kMC_options_file="${2}"
+else 
+    echo "Usage: $0 JOBNAME options_VOTCA_kMC_file kMC_VOTCA_startline Modus=[single,singleUx,singleUy,singleUz,increasing/multidirection/multidirection_scaled]  U_ext  NCPUS && NODE && QUEUE && TIME && DEPEND "
+    exit 1
+fi
+
+if [ $# -ge 2 ]; then   ## Einlesen der kMC_VOTCA_startline des KMC-Programmes mit einer Rechnung oder standard
+    kMC_statefilename="${3}"
+else 
+        echo "Usage: $0 JOBNAME options_VOTCA_kMC_file kMC_VOTCA_startline Modus=[single,singleUx,singleUy,singleUz,increasing/multidirection/multidirection_scaled]  U_ext  NCPUS && NODE && QUEUE && TIME && DEPEND "
+    exit 1
+fi
+
+modus=${4}
+U_ext=${5}
+
+if [[ ! -e "${VOTCA_multiple_file}" ]] ; then
+	echo "Error the file does not exist in the current folder: ${VOTCA_multiple_file} "
+	exit 1
+fi
+
+
+echo "Using: ${kMC_options_file}  ${kMC_statefilename} ${multidirection_modus} ${U_ext} "
+if [[ ! -e ${kMC_options_file} ]] ; then
+	echo "Error: kmc options file does not exist in current folder: ${kMC_options_file}"
+	exit 1
+fi
+
+if [[ "${kMC_options_file: -4}" != ".xml" ]] ; then
+	echo "Error; the kmc options file is not a xml file: ${kMC_options_file}"
+	exit 1
+fi
+
+
+
+if [[ ! -e ${kMC_statefilename} ]] ; then
+	echo "Error: kmc state file does not exist in current folder: ${kMC_statefilename}"
+	exit 1
+fi
+
+if [[ "${kMC_statefilename: -4}" != ".sql" ]] ; then
+	echo "Error; the kmc state file does not posses a .sql termination: ${kMC_statefile}"
+	exit 1
+fi
+
+
+echo $DEPEND
+
+qsub -V << EOF
+#!/bin/bash
+#PBS -l walltime=${TIME}:00:00,nodes=${NODE}:ppn=${NCPUS}
+#PBS -q ${QUEUE}
+#PBS -N ${JOB}
+#PBS -e ${HOME}/QSUBIO
+#PBS -o ${HOME}/QSUBIO
+${DEPEND}
+#
+
+#shorten host name
+S_HOST=\${PBS_O_HOST%.uni-muenster.de}
+
+# activate verbose shell
+set -vx
+declare -i copy_ok=0
+# ! need to use scp/ssh via gondor !
+# create temporary input/output directory
+TMPINOUT="/storage/queuehome/t/t_koch08/queue_inout/VOTCA.\${PBS_JOBID}"
+ssh gondor mkdir -p \${TMPINOUT}
+
+# create SCRATCH directory
+SCRATCH="/scratch/VOTCA_CTP.\${PBS_JOBID}"
+mkdir -p \${SCRATCH}
+
+echo "Starting ${JOB} from ${CURDIR} on \${PARENT}"
+
+# create utility scripts: ! need to use scp !
+echo '[ \$# -eq 0 ] && ssh gondor "ssh'" \${HOSTNAME}"' tail -f '"/var/spool/torque/spool/\${PBS_JOBID}.OU\"" >> tail.\${PBS_JOBID}.sh
+echo '[ \$# -eq 1 ] && ssh gondor "ssh'" \${HOSTNAME}"' tail -f '"\${TMPNAM}/"'\${1}"' >> tail.\${PBS_JOBID}.sh
+chmod 755 tail.\${PBS_JOBID}.sh
+scp tail.\${PBS_JOBID}.sh gondor:\${TMPINOUT} 
+ssh gondor " scp \${TMPINOUT}/tail.\${PBS_JOBID}.sh \${S_HOST}:${CURDIR}"
+
+# run JOB in SCRATCH directory on PARENT
+cd \${SCRATCH}
+
+# fetch input data 
+ssh gondor " scp -pr \${S_HOST}:${CURDIR}/* \${TMPINOUT}"
+#ssh gondor " scp -p \${S_HOST}:${CURDIR}/${JOB}.chk \${TMPINOUT}"
+#ssh gondor " scp -p \${S_HOST}:${CURDIR}/*.chk \${TMPINOUT}"
+
+scp -pr gondor:\${TMPINOUT}/* .  && copy_ok+=1
+
+
+# set INTEL environment
+#currently @gondor
+export LD_LIBRARY_PATH=/opt/intel/lib/intel64:/opt/intel/mkl/lib/intel64:\${LD_LIBRARY_PATH}
+
+# run timer
+function timestop {
+  maxsec=\$((${TIME}*3600))
+  limit=\$((\${maxsec} - 1800))
+  limit2=\$((\${maxsec}*9/10))
+
+  if [ \$(( \$limit2 > \$limit )) == 1 ]
+  then 
+    limit=\$limit2
+  fi
+
+  echo "Starting Time measurement"
+  echo "   Limit = \${limit} s"
+
+  sleep \${limit}
+  echo "Soft Exit!"
+# put output data & clean up
+  scp -p \${SCRATCH}/* gondor:\${TMPINOUT}
+  ssh gondor " scp -p \${TMPINOUT}/* \${S_HOST}:${CURDIR}"
+  exit
+}
+
+
+### Setup VOTCA environment 
+PATH=/opt/files/votca_installed/bin:/opt/files/t_koch08/bin:\${PATH}
+prefix=/opt/files/votca_installed/
+source /opt/files/votca_installed/bin/VOTCARC_KANKRA.bash
+
+export LD_LIBRARY_PATH=/opt/gromacs_2016/lib:/usr/lib/x86_64-linux-gnu:\${LD_LIBRARY_PATH}
+export LD_LIBRARY_PATH=/opt/files/votca_installed/lib:\${LD_LIBRARY_PATH}
+
+
+#convienience function to change xml option for VOTCA
+changeoption(){
+    sed -i "s&<\${1}.*>.*</\${1}>&<\${1}>\${2}</\${1}>&" \$3
+}
+
+changeoption_runtime(){	
+	sed -i "s&<\${1}.*>.*</\${1}>&<\${1} unit='integer'>\${2}</\${1}>&" \$3 
+}  
+
+if [[ -e options_pewald3D.xml ]]; then
+	changeoption "job_file" "\${SCRATCH}/jobwriter.mps.ct.xml" options_pewald3D.xml
+fi
+
+# run VOTCA executable line is in  
+timestop & ${VOTCA_multiple_file}  "${kMC_options_file}"  "${kMC_statefilename}"  "${modus}"  "${U_ext}"
+
+scp -p /var/spool/torque/spool/\${PBS_JOBID}.OU .
+scp -p /var/spool/torque/spool/\${PBS_JOBID}.ER .
+
+mv \${PBS_JOBID}.OU ${JOB}_\${PBS_JOBID}.OU
+mv \${PBS_JOBID}.ER ${JOB}_\${PBS_JOBID}.ER
+
+# put output data & clean up
+scp -pr \${SCRATCH}/* gondor:\${TMPINOUT} && copy_ok+=1
+ssh gondor " scp -pr \${TMPINOUT}/* \${S_HOST}:${CURDIR}" && copy_ok+=1
+
+# retrieve PBS output
+
+scp -p /var/spool/torque/spool/\${PBS_JOBID}.OU gondor:\${TMPINOUT}
+scp -p /var/spool/torque/spool/\${PBS_JOBID}.ER gondor:\${TMPINOUT}
+ssh  gondor " scp \${TMPINOUT}/\${PBS_JOBID}.OU \${S_HOST}:QSUBIO "
+ssh  gondor " scp \${TMPINOUT}/\${PBS_JOBID}.ER \${S_HOST}:QSUBIO "
+
+# clean up
+if [[ \${copy_ok} == 3 ]]; then 
+	rm -r  \${SCRATCH}/*
+	rmdir \${SCRATCH}
+	cd 
+	rm -f tail.\${PBS_JOBID}.sh
+	ssh gondor "rm \${TMPINOUT}/*"
+	ssh gondor "rmdir \${TMPINOUT}"
+	ssh gondor "ssh \${S_HOST} rm ${CURDIR}/tail.\${PBS_JOBID}.sh"
+fi 
+EOF
