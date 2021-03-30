@@ -47,27 +47,27 @@ and compile with LAPACK and BLAS package:
 
  charge_transport_package
  Possible calculators: 
- reduce_kmc_xyz
- calc_pathway
- Dijkstra_kmcNetwork
- Dijkstra_newNetwork
- Dijkstra_loadNetwork
- KMC_FOR_MULTIPLE_CHARGES
- KMC_FOR_MULTIPLE_CHARGES_xml   
- gro_to_VOTCA
- rates_to_VOTCA_sqlfile
- calc_current_I
- calc_current_I_from_sql
- calc_current_I_xml
- DIPRO
- DIPRO_pair
- DIPRO_xyz
- DIPRO_nMO
- lambda_out_dE_out
- lambda_out
- lambda_in
- lambda_in_oniom
- rate_calculator
- data_analysis
+ reduce_kmc_xyz 
+ calc_pathway 
+ Dijkstra_kmcNetwork 
+ Dijkstra_newNetwork 
+ Dijkstra_loadNetwork 
+ KMC_FOR_MULTIPLE_CHARGES 
+ KMC_FOR_MULTIPLE_CHARGES_xml    
+ gro_to_VOTCA  
+ rates_to_VOTCA_sqlfile  
+ calc_current_I  
+ calc_current_I_from_sql  
+ calc_current_I_xml  
+ DIPRO  
+ DIPRO_pair  
+ DIPRO_xyz  
+ DIPRO_nMO  
+ lambda_out_dE_out  
+ lambda_out  
+ lambda_in  
+ lambda_in_oniom  
+ rate_calculator  
+ data_analysis  
 
 
