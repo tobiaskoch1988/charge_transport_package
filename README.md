@@ -14,8 +14,8 @@ to macroscopic observables.
 
 The kMC simulations can be performed using three different programms.
 A) ctp_run / kmc_run (VOTCA, C++, fast),
-B) kmc_multigeo_V4 (Python Jim B., on-the-fly modus)
-C) charge_transport_package, (Fortran Tobias K., a priori modus)
+B) kmc_multigeo_V4 (Python, on-the-fly modus)
+C) charge_transport_package, (Fortran, a priori modus)
 
 The options for different calculations are set using
 A) options_VOTCA.xml
