@@ -610,7 +610,7 @@ temperature=$( grep "<temperature>" ${kMC_options_file} ) ; temperature=${temper
 
 ### get charge carrier type from option file
 carrier=$( grep "<carriertype>"    ${kMC_options_file} ) ;  carrier=${carrier##*<carriertype>} ;  carrier=${carrier%%</carriertype>*} ; carrier=${carrier:0:1} 
-if [ "{carrier}" == "h" ] || [ "{carrier}" == "e" ] || [ "{carrier}" == "t" ]|| [ "{carrier}" == "s" ]   ; then
+if [ "${carrier}" == "h" ] || [ "${carrier}" == "e" ] || [ "${carrier}" == "t" ]|| [ "${carrier}" == "s" ]   ; then
 	echo "carrier: ${carrier}"
 elif [ -z "${carrier}" ] ; then
 	echo "carrier: ${carrier}"
