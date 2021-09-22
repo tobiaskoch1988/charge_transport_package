@@ -5,7 +5,9 @@ Dissertation
 
 Promotion: July 1st, 2021 Tobias Benedikt Koch
 
- diss_koch_introduction.pdf  " Introduction " 
+The dissertation contains the following files:
+
+ diss_koch_introduction.pdf    " Introduction " 
  diss_koch_chapter_01.pdf      " Theoretical Background " 
  diss_koch_chapter_02.pdf      " Computational Details " 
  diss_koch_chapter_03.pdf      " Charge Transfer Rates " 
@@ -13,9 +15,11 @@ Promotion: July 1st, 2021 Tobias Benedikt Koch
  diss_koch_chapter_05.pdf      " Screening for Perylene Diimide Acceptors " 
  diss_koch_chapter_06.pdf      " Charge Transfer in OLED Materials " 
  diss_koch_chapter_07.pdf      " Conclusion and Outlook " 
- diss_koch_appendix.pdf		     " Appendix: Charge Transfer Rates and Charge Transport " 
+ diss_koch_appendix.pdf		      " Appendix: Charge Transfer Rates and Charge Transport " 
  diss_koch_bibliography.pdf    " Bibliography "
 
+###  You can combine multiple files into one file. Use the command:
+pdftk  diss_koch_introduction.pdf  diss_koch_chapter_01.pdf  diss_koch_chapter_02.pdf  diss_koch_chapter_03.pdf  diss_koch_chapter_04.pdf   diss_koch_chapter_05.pdf   diss_koch_chapter_06.pdf   diss_koch_chapter_07.pdf   diss_koch_appendix.pdf	   diss_koch_bibliography.pdf  cat output  diss_koch_all.pdf
 
 Keywords:
 multiscale modelling, bulk heterojunction organic solar cells, charge transport simulation, kinetic Monte Carlo simulation, polymer donors, non-fullerene acceptors
