@@ -1,1 +1,18 @@
 Dissertation
+
+
+Abstract:
+
+The theoretical study of charge transport in organic materials is challenging since it involves multiple time and length scales -- from quantum-mechanical charge transfer processes at the molecular level to mesoscopic structural and dynamical parameters governing the morphology of amorphous donor-acceptor materials.
+Our goal here is to compute the mobility of electrons and holes in a multiscale model via kinetic Monte Carlo simulations using bimolecular charge transfer rates based on the Marcus theory. 
+Therefore, accurate hopping rates between neighbouring molecules are mandatory, depending on the internal and outer-sphere reorganization energies, site-energy differences, charge transfer integrals, and external driving forces.
+We compare different computational approaches for these quantities and probe their applicability to model intermolecular and intramolecular charge transfer in amorphous materials.
+The hopping rates are then fed into the kinetic Monte Carlo simulations, which allow us to monitor the charge dynamics in the system as well as to get ensemble averages of the occupation probability, charge carrier mobility, electronic fluxes and pathways of minimal local resistance.
+Hence, the multiscale model links the microscopic structure to macroscopic observables.
+This thesis comprises the development, implementation, parametrisation and validation of algorithms for the simulation and analysis of charge transport.
+Here we apply this approach to amorphous P3HT and PPDI as well as to mixtures of donor:acceptor materials in organic bulk heterojunction solar cells, e.g. P3HT:DIPBI and PBDT-TS1:PPDI.
+In particular, we find distinct electron transport mechanisms in the latter two materials due to characteristic morphological differences.
+We present a screening of perylene diimide acceptors regarding structural and optical properties, aggregation behaviour and the resulting charge transfer properties for the application in organic solar cells.
+Similarly, we investigate organic compounds and metal-organic complexes for electroluminescence in organic light-emitting diodes and their aggregation behaviour.
+Detailed knowledge about these quantities may help to enhance the performance of future organic photovoltaics and optoelectronic devices. 
+
