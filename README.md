@@ -70,4 +70,7 @@ and compile with LAPACK and BLAS package:
  rate_calculator  
  data_analysis  
 
-
+If you use this package, please cite:
+T. Koch, J. Bachmann, T. Lettmann, and N. L. Doltsinis, 
+"Multiscale modelling of charge transport in P3HT:DIPBI bulk heterojunction organic solar cells"
+Phys. Chem. Chem. Phys. 23, 12233-12250 (2021). 
