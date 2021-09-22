@@ -1,8 +1,44 @@
 Dissertation
 
 
-Abstract:
 
+
+Promotion: July 1st, 2021 Tobias Benedikt Koch
+
+ diss_koch_introduction.pdf  " Introduction " 
+ diss_koch_chapter_01.pdf      " Theoretical Background " 
+ diss_koch_chapter_02.pdf      " Computational Details " 
+ diss_koch_chapter_03.pdf      " Charge Transfer Rates " 
+ diss_koch_chapter_04.pdf      " Charge Transport in Organic Solar Cells " 
+ diss_koch_chapter_05.pdf      " Screening for Perylene Diimide Acceptors " 
+ diss_koch_chapter_06.pdf      " Charge Transfer in OLED Materials " 
+ diss_koch_chapter_07.pdf      " Conclusion and Outlook " 
+ diss_koch_appendix.pdf		     " Appendix: Charge Transfer Rates and Charge Transport " 
+ diss_koch_bibliography.pdf    " Bibliography "
+
+
+Keywords:
+multiscale modelling, bulk heterojunction organic solar cells, charge transport simulation, kinetic Monte Carlo simulation, polymer donors, non-fullerene acceptors
+
+
+Kurzfassung:
+Die theoretische Untersuchung des Ladungstransports in organischen Materialien ist eine herausfordernde Aufgabe, da sie mehrere Zeit- und Längenskalen umfasst - von quantenmechanischen Ladungstransferprozessen auf molekularer Ebene bis hin zu mesoskopischen, strukturellen und dynamischen Kenngrößen, welche die Morphologie von amorphen Donor-Akzeptormaterialien bestimmen.
+Unser Ziel ist es hier, die Mobilität von Elektronen und Löchern in einer Multiskalen-Modellierung mittels kinetischer Monte-Carlo-Simulationen unter Verwendung bimolekularer Ladungstransferraten auf der Grundlage der Marcus-Theorie zu berechnen. 
+Dafür sind genaue Sprungraten zwischen benachbarten Molekülen erforderlich, die abhängig sind von der inneren und äußeren  Reorganisationsenergie, der Site-Energie-Differenz, den Ladungstransferintegralen und den externen Antriebskräften.
+Wir vergleichen verschiedene Berechnungsansätze für diese Größen und untersuchen ihre Anwendbarkeit zur Modellierung des inter- und intramolekularen Ladungstransfers in amorphen Materialien.
+Die Sprungraten werden daraufhin in die kinetischen Monte-Carlo-Simulationen eingespeist, die es uns ermöglichen, die Ladungsträgerdynamik im System zu überwachen und Ensemblemittelwerte der Besetzungswahrscheinlichkeit, der Ladungsträgermobilität
+sowie der elektronischen Ströme zu bestimmen und Pfade mit minimalem lokalem Widerstand zu ermitteln.
+Daher verbindet die Multiskalen-Modellierung die mikroskopische Struktur mit makroskopischen Observablen.
+Diese Arbeit umfasst die Entwicklung, Implementierung und Validierung von Algorithmen zur Simulation und Analyse des Ladungstransports.
+Hier wenden wir diesen Ansatz sowohl auf amorphes P3HT und PPDI als auch auf Mischungen von Donor:Akzeptor-Materialien in organischen Solarzellen mit Bulk-Hetero-Junction an, z.B. P3HT:DIPBI und PBDT-TS1:PPDI. 
+Insbesondere in den beiden letztgenannten Materialien finden wir aufgrund abweichender morphologischer Merkmale unterschiedliche Elektronentransportmechanismen.
+Wir präsentieren ein Screening von Perylendiimid-Akzeptoren hinsichtlich der strukturellen und optischen Eigenschaften, des Aggregationsverhaltens und der resultierenden Ladungstransfereigenschaften für die Anwendung in organischen Solarzellen.
+Analog untersuchen wir organische Verbindungen und metall-organische Komplexe für die Elektrolumineszenz in organischen Leuchtdioden sowie ihr Aggregationsverhalten.
+Detaillierte Kenntnisse über diese Größen können dazu beitragen die Effizienz von organischer Photovoltaik und optoelektronischen Bauelementen zu verbessern. 
+
+
+
+Abstract:
 The theoretical study of charge transport in organic materials is challenging since it involves multiple time and length scales -- from quantum-mechanical charge transfer processes at the molecular level to mesoscopic structural and dynamical parameters governing the morphology of amorphous donor-acceptor materials.
 Our goal here is to compute the mobility of electrons and holes in a multiscale model via kinetic Monte Carlo simulations using bimolecular charge transfer rates based on the Marcus theory. 
 Therefore, accurate hopping rates between neighbouring molecules are mandatory, depending on the internal and outer-sphere reorganization energies, site-energy differences, charge transfer integrals, and external driving forces.
